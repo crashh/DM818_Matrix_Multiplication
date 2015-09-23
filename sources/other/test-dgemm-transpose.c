@@ -17,20 +17,18 @@ void square_dgemm (int n, double* A, double* B, double* C)
 	double tmp[n*n];
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < n; ++j) {
-		    	//Save transpose in tmp
-			tmp[i+j*n] = B[j+i*n]; 
+		    //Save transpose in tmp
+			tmp[i+j*n] = A[j+i*n]; 
 		}
 	}
 	
 	// Do the original calculation, now with the transpose:
 	for (int i = 0; i < n; ++i) {
-		for (int j = 0; j < n; ++j) {
-		        /* Compute C(i,j) */
-		        double cij = C[i+j*n];
-	                for (int k = 0; k < n; ++k) {
-				cij += A[i+k*n] * tmp[j+k*n];
-		        }
-		        C[i+j*n] = cij;
-		}
+        for( int j = 0; j < n; j++ ) {
+            double cij = C[i+j*n];
+            for( int k = 0; k < n; k++ )
+                 cij += tmp[k+i*n] * B[k+j*n];
+            C[i+j*n] = cij;
+        }
 	}
 }

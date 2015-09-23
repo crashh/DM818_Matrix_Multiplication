@@ -26,17 +26,17 @@ void square_dgemm (int n, double* A, double* B, double* C)
 			for (int k = 0; k < n; k += SM) {
 			    /* Iterate missing indexes of previous loop I */
 				for (int i2 = 0; i2 < SM; ++i2) {
-				    double* rA = &A[i+j*n]; // Helping gcc compiler optimising
-				    double* rB = &B[i+k*n]; // Helping gcc compiler optimising
-				    rA += n; 
-				    rB += n;    
+				    double* rC = &C[i+j*n]; // Helping gcc compiler optimising
+				    double* rA = &A[i+k*n]; // Helping gcc compiler optimising
+				    rC += n; 
+				    rA += n;    
 				    /* Iterate missing indexes of previous loop K */
 				    for (int k2 = 0; k2 < SM; ++k2) {
-				        double* rC = &C[k+j*n]; // Helping gcc compiler optimising
-				        rC += n;
+				        double* rB = &B[k+j*n]; // Helping gcc compiler optimising
+				        rB += n;
 				        /* Iterate missing indexes of previous loop J */
 					    for (int j2 = 0; j2 < SM; ++j2) {
-						    rA[j2] += rB[k2] * rC[j2];
+						    C[j2] += rA[k2] * rB[j2];
 						}                        
 				    }
 			    }

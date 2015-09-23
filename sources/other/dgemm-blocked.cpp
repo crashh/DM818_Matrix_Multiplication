@@ -31,6 +31,7 @@ void basic_dgemm( int lda, int M, int N, int K,
        for( int j = 0; j < N; j++ ) 
        {
             double cij = C[i+j*lda];
+            #pragma GCC ivdep
             for( int k = 0; k < K; k++ )
                  cij += A[i+k*lda] * B[k+j*lda];
             C[i+j*lda] = cij;
