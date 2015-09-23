@@ -39,7 +39,7 @@ LIBS = -lcblas -latlas -lpthread
 #                   (http://stackoverflow.com/questions/16064288/gcc-optimization-flags-for-matrix-vector-operations)
 CFLAGS = -O2 -funroll-loops -funit-at-a-time -march=native -mfpmath=sse -fstrict-aliasing -ftree-vectorize
 
-all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-test-transpose benchmark-test-blocking
+all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-transpose benchmark-orig-blocking
 
 benchmark-naive: benchmark.o dgemm-naive.o
 	$(CC) -o $@ benchmark.o dgemm-naive.o $(LIBS)
@@ -47,10 +47,10 @@ benchmark-blocked: benchmark.o dgemm-blocked.o
 	$(CC) -o $@ benchmark.o dgemm-blocked.o $(LIBS)
 benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -o $@ benchmark.o dgemm-blas.o $(LIBS)
-benchmark-test-transpose: benchmark.o test-dgemm-transpose.o
-	$(CC) -o $@ benchmark.o test-dgemm-transpose.o $(LIBS)
-benchmark-test-blocking: benchmark.o test-dgemm-blocking.o
-	$(CC) -o $@ benchmark.o test-dgemm-blocking.o $(LIBS)
+benchmark-test-transpose: benchmark.o dgemm-transpose.o
+	$(CC) -o $@ benchmark.o dgemm-transpose.o $(LIBS)
+benchmark-test-blocking: benchmark.o orig-dgemm-blocking.o
+	$(CC) -o $@ benchmark.o orig-dgemm-blocking.o $(LIBS)
 
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) $<
