@@ -54,9 +54,9 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
       way to handle the fringe blocks.  The better way will be more
       machine-efficient, but very programmer-inefficient.
     */
-    int M = min(BLOCK_SIZE, lda - i);
-    int N = min(BLOCK_SIZE, lda - j);
-    int K = min(BLOCK_SIZE, lda - k);
+    int M = min(BLOCK_SIZE_3, lda - i);
+    int N = min(BLOCK_SIZE_3, lda - j);
+    int K = min(BLOCK_SIZE_3, lda - k);
 
     /*
       Added note (Lars):
