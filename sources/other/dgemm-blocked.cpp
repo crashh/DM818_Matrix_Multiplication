@@ -2,14 +2,12 @@
   In case you're wondering, dgemm stands for Double-precision, GEneral
   Matrix-Matrix multiplication.
 */
+const char *dgemm_desc = "Simple blocked dgemm.";
 
-const char* dgemm_desc = "Simple blocked dgemm.";
-
-#if !defined(BLOCK_SIZE)
-#define BLOCK_SIZE 41
-#endif
-
-#define min(a,b) (((a)<(b))?(a):(b))
+#define BLOCK_SIZE_1 170
+#define BLOCK_SIZE_2 60
+#define BLOCK_SIZE_3 4
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 /*
   A is M-by-K
@@ -19,63 +17,81 @@ const char* dgemm_desc = "Simple blocked dgemm.";
   lda is the leading dimension of the matrix (the M of square_dgemm).
 */
 
-void basic_dgemm( int lda, int M, int N, int K,
-                  double *A, double *B, double *C )
-{
-  /*
-    To optimize this, think about loop unrolling and software
-    pipelining.  Hint:  For the majority of the matmuls, you
-    know exactly how many iterations there are (the block size)...
-  */
-  for( int i = 0; i < M; i++ )
-       for( int j = 0; j < N; j++ ) 
-       {
-            double cij = C[i+j*lda];
-            #pragma GCC ivdep
-            for( int k = 0; k < K; k++ )
-                 cij += A[i+k*lda] * B[k+j*lda];
-            C[i+j*lda] = cij;
-       }
+void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) {
+    /*
+      To optimize this, think about loop unrolling and software
+      pipelining.  Hint:  For the majority of the matmuls, you
+      know exactly how many iterations there are (the block size)...
+    */
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            double cij = C[i + j * lda];
+            for (int k = 0; k < K; k++) {
+                cij += A[i + k * lda] * B[k + j * lda];
+            }
+            C[i + j * lda] = cij;
+        }
+    }
 }
 
-void do_block( int lda, double *A, double *B, double *C,
-               int i, int j, int k )
-{
-     /*
-       Remember that you need to deal with the fringes in each
-       dimension.
+void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
+    /*
+      Remember that you need to deal with the fringes in each
+      dimension.
 
-       If the matrix is 7x7 and the blocks are 3x3, you'll have 1x3,
-       3x1, and 1x1 fringe blocks.
+      If the matrix is 7x7 and the blocks are 3x3, you'll have 1x3,
+      3x1, and 1x1 fringe blocks.
 
-             xxxoooX
-             xxxoooX
-             xxxoooX
-             oooxxxO
-             oooxxxO
-             oooxxxO
-             XXXOOOX
+            xxxoooX
+            xxxoooX
+            xxxoooX
+            oooxxxO
+            oooxxxO
+            oooxxxO
+            XXXOOOX
 
-       You won't get this to go fast until you figure out a `better'
-       way to handle the fringe blocks.  The better way will be more
-       machine-efficient, but very programmer-inefficient.
-     */
-     int M = min( BLOCK_SIZE, lda-i );
-     int N = min( BLOCK_SIZE, lda-j );
-     int K = min( BLOCK_SIZE, lda-k );
-     
-     /*
-       Added note (Lars):
-       Each iteration here, is iterating the missing indexes of the
-       ones we skipped in square_dgemm. 
-     */
-     basic_dgemm( lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+      You won't get this to go fast until you figure out a `better'
+      way to handle the fringe blocks.  The better way will be more
+      machine-efficient, but very programmer-inefficient.
+    */
+    int M = min(BLOCK_SIZE, lda - i);
+    int N = min(BLOCK_SIZE, lda - j);
+    int K = min(BLOCK_SIZE, lda - k);
+
+    /*
+      Added note (Lars):
+      Each iteration here, is iterating the missing indexes of the
+      ones we skipped in square_dgemm.
+1    */
+    basic_dgemm(lda, M, N, K, A + i + k * lda, B + k + j * lda, C + i + j * lda);
 }
 
-void square_dgemm( int M, double *A, double *B, double *C )
-{
-     for( int i = 0; i < M; i += BLOCK_SIZE )
-          for( int j = 0; j < M; j += BLOCK_SIZE )
-               for( int k = 0; k < M; k += BLOCK_SIZE )
-                    do_block( M, A, B, C, i, j, k );
+void square_dgemm(int M, double *A, double *B, double *C) {
+    for (int i = 0; i < M; i += BLOCK_SIZE_1) {
+        for (int j = 0; j < M; j += BLOCK_SIZE_1) {
+            for (int k = 0; k < M; k += BLOCK_SIZE_1) {
+
+                for (int i2 = 0; i2 < BLOCK_SIZE_1; i2 += BLOCK_SIZE_2) {
+                    for (int j2 = 0; j2 < BLOCK_SIZE_1; j2 += BLOCK_SIZE_2) {
+                        for (int k2 = 0; k2 < BLOCK_SIZE_1; k2 += BLOCK_SIZE_2) {
+
+                            for (int i3 = 0; i3 < BLOCK_SIZE_2; i3 += BLOCK_SIZE_3) {
+                                for (int j3 = 0; j3 < BLOCK_SIZE_2; j3 += BLOCK_SIZE_3) {
+                                    for (int k3 = 0; k3 < BLOCK_SIZE_2; k3 += BLOCK_SIZE_3) {
+                                        do_block(M, A, B, C,
+                                                 i * BLOCK_SIZE_1 + i2 * BLOCK_SIZE_2 + i3 * BLOCK_SIZE_3,
+                                                 j * BLOCK_SIZE_1 + j2 * BLOCK_SIZE_2 + j3 * BLOCK_SIZE_3,
+                                                 k * BLOCK_SIZE_1 + k2 * BLOCK_SIZE_2 + k3 * BLOCK_SIZE_3);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+            }
+        }
+    }
 }
+
