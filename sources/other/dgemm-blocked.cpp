@@ -63,7 +63,8 @@ void square_dgemm(int M, double *A, double *B, double *C) {
                             for (int i3 = 0; i3 < BLOCK_SIZE_2; i3 += BLOCK_SIZE_3) {
                                 for (int j3 = 0; j3 < BLOCK_SIZE_2; j3 += BLOCK_SIZE_3) {
                                     for (int k3 = 0; k3 < BLOCK_SIZE_2; k3 += BLOCK_SIZE_3) {
-                                        do_block(M, A, B, C,
+                                        // Probably going way past what we should
+                                        do_block(BLOCK_SIZE_2, A, B, C,
                                                  i * BLOCK_SIZE_1 + i2 * BLOCK_SIZE_2 + i3 * BLOCK_SIZE_3,
                                                  j * BLOCK_SIZE_1 + j2 * BLOCK_SIZE_2 + j3 * BLOCK_SIZE_3,
                                                  k * BLOCK_SIZE_1 + k2 * BLOCK_SIZE_2 + k3 * BLOCK_SIZE_3);
