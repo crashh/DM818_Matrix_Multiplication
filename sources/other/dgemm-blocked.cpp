@@ -62,7 +62,12 @@ void do_block( int lda, double *A, double *B, double *C,
      int M = min( BLOCK_SIZE, lda-i );
      int N = min( BLOCK_SIZE, lda-j );
      int K = min( BLOCK_SIZE, lda-k );
-
+     
+     /*
+       Added note (Lars):
+       Each iteration here, is iterating the missing indexes of the
+       ones we skipped in square_dgemm. 
+     */
      basic_dgemm( lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
 }
 

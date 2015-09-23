@@ -32,7 +32,7 @@ LIBS = -lcblas -latlas -lpthread
 
 CFLAGS = -O3
 
-all:	benchmark-naive benchmark-blocked benchmark-blas
+all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-test-transpose benchmark-test-blocking
 
 benchmark-naive: benchmark.o dgemm-naive.o
 	$(CC) -o $@ benchmark.o dgemm-naive.o $(LIBS)
@@ -40,6 +40,10 @@ benchmark-blocked: benchmark.o dgemm-blocked.o
 	$(CC) -o $@ benchmark.o dgemm-blocked.o $(LIBS)
 benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -o $@ benchmark.o dgemm-blas.o $(LIBS)
+benchmark-test-transpose: benchmark.o test-dgemm-transpose.o
+	$(CC) -o $@ benchmark.o test-dgemm-transpose.o $(LIBS)
+benchmark-test-blocking: benchmark.o test-dgemm-blocking.o
+	$(CC) -o $@ benchmark.o test-dgemm-blocking.o $(LIBS)
 
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) $<
@@ -48,4 +52,4 @@ benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm -f benchmark-naive benchmark-blocked benchmark-blas *.o
+	rm -f benchmark-naive benchmark-blocked benchmark-blas benchmark-test-transpose benchmark-test-blocking *.o

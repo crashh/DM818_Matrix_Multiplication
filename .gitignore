@@ -28,5 +28,9 @@
 *.x86_64
 *.hex
 
+# Temp files
+*.c~
+*.cpp~
+
 # Debug files
 *.dSYM/
