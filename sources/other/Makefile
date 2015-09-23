@@ -47,9 +47,9 @@ benchmark-blocked: benchmark.o dgemm-blocked.o
 	$(CC) -o $@ benchmark.o dgemm-blocked.o $(LIBS)
 benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -o $@ benchmark.o dgemm-blas.o $(LIBS)
-benchmark-test-transpose: benchmark.o dgemm-transpose.o
+benchmark-transpose: benchmark.o dgemm-transpose.o
 	$(CC) -o $@ benchmark.o dgemm-transpose.o $(LIBS)
-benchmark-test-blocking: benchmark.o orig-dgemm-blocking.o
+benchmark-orig-blocking: benchmark.o orig-dgemm-blocking.o
 	$(CC) -o $@ benchmark.o orig-dgemm-blocking.o $(LIBS)
 
 %.o: %.cpp
@@ -59,4 +59,4 @@ benchmark-test-blocking: benchmark.o orig-dgemm-blocking.o
 	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm -f benchmark-naive benchmark-blocked benchmark-blas benchmark-test-transpose benchmark-test-blocking *.o
+	rm -f benchmark-naive benchmark-blocked benchmark-blas benchmark-transpose benchmark-orig-blocking *.o
