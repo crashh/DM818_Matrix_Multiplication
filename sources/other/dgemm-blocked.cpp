@@ -4,8 +4,8 @@
 */
 const char *dgemm_desc = "Simple blocked dgemm.";
 
-#define BLOCK_SIZE_1 170
-#define BLOCK_SIZE_2 60
+#define BLOCK_SIZE_1 168
+#define BLOCK_SIZE_2 56
 #define BLOCK_SIZE_3 4
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -35,25 +35,7 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
 }
 
 void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
-    /*
-      Remember that you need to deal with the fringes in each
-      dimension.
-
-      If the matrix is 7x7 and the blocks are 3x3, you'll have 1x3,
-      3x1, and 1x1 fringe blocks.
-
-            xxxoooX
-            xxxoooX
-            xxxoooX
-            oooxxxO
-            oooxxxO
-            oooxxxO
-            XXXOOOX
-
-      You won't get this to go fast until you figure out a `better'
-      way to handle the fringe blocks.  The better way will be more
-      machine-efficient, but very programmer-inefficient.
-    */
+    // TODO Deal with fringe blocks
     int M = min(BLOCK_SIZE_3, lda - i);
     int N = min(BLOCK_SIZE_3, lda - j);
     int K = min(BLOCK_SIZE_3, lda - k);
@@ -62,8 +44,11 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
       Added note (Lars):
       Each iteration here, is iterating the missing indexes of the
       ones we skipped in square_dgemm.
-1    */
-    basic_dgemm(lda, M, N, K, A + i + k * lda, B + k + j * lda, C + i + j * lda);
+     */
+    basic_dgemm(lda, M, N, K,
+                A + i + k * lda, // Pointer to A, B and C
+                B + k + j * lda,
+                C + i + j * lda);
 }
 
 void square_dgemm(int M, double *A, double *B, double *C) {
