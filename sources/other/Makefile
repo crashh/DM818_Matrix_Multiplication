@@ -30,7 +30,14 @@ LIBS = -lcblas -latlas -lpthread
 #not optimized Ubuntu version
 #LIBS= -lcblas
 
-CFLAGS = -O3
+#https://gcc.gnu.org/onlinedocs/gcc-3.4.4/gcc/Optimize-Options.html
+# -funroll-loops    Gives quite a big performance improvement.
+# -funit-at-a-time  No immediate noticable improvement. Needs more testing.
+# -march=native     Small performance gain. 
+#                   (http://stackoverflow.com/questions/16064288/gcc-optimization-flags-for-matrix-vector-operations)
+# -mfpmath=sse      Small performance gain. 
+#                   (http://stackoverflow.com/questions/16064288/gcc-optimization-flags-for-matrix-vector-operations)
+CFLAGS = -O3 -funroll-loops -funit-at-a-time -march=native -mfpmath=sse
 
 all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-test-transpose benchmark-test-blocking
 

@@ -1,5 +1,9 @@
 const char* dgemm_desc = "Optimised, three-loop dgemm.";
 
+/* 
+    THIS IS JUST EXPERIMENTING, THIS IS NOT THE GIVEN ALGORTIHM
+*/
+
 /* This routine performs a optimised dgemm operation
  *  C := C + A * B
  * where A, B, and C are lda-by-lda matrices stored in column-major format.
