@@ -2,6 +2,10 @@
   In case you're wondering, dgemm stands for Double-precision, GEneral
   Matrix-Matrix multiplication.
 */
+#include <x86intrin.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 const char* dgemm_desc = "Simple blocked dgemm.";
 
