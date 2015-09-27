@@ -37,6 +37,29 @@ void basic_dgemm( int lda, int M, int N, int K,
        }
 }
 
+
+void simd_dgemm( int lda, int M, int N, int K,
+                  double *A, double *B, double *C ) {
+	__m128 v1, v2, vMul, vRes;
+	
+	for (int i = 0; i < M; i++) {
+		for (int j = 0; j < N; j++) 
+		{
+			vRes = _mm_setzero_ps();
+			for (int k = 0; k < K; k+=4) {
+				v1 = _mm_load_ps(&A[k+i * lda]);
+				v2 = _mm_load_ps(&B[k+j * lda]);
+				vMul = _mm_mul_ps(v1, v2);
+
+				vRes = _mm_add_ps(vRes, vMul);
+			}
+			vRes = _mm_hadd_ps(vRes, vRes);
+			vRes = _mm_hadd_ps(vRes, vRes);
+			_mm_store_ss(&C[i+j * lda], vRes);
+		}
+	}
+}
+
 void do_block( int lda, double *A, double *B, double *C,
                int i, int j, int k )
 {
@@ -65,7 +88,8 @@ void do_block( int lda, double *A, double *B, double *C,
        Each iteration here, is iterating the missing indexes of the
        ones we skipped in square_dgemm. 
      */
-     basic_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
+     //basic_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
+     simd_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
 }
 
 void square_dgemm( int M, double *A, double *B, double *C )
