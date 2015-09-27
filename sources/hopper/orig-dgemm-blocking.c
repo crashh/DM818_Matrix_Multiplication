@@ -44,7 +44,7 @@ void basic_dgemm( int lda, int M, int N, int K,
 
 void simd_dgemm( int lda, int M, int N, int K,
                   double *A, double *B, double *C ) {
-	__m128 v1, v2, vMul, vRes;
+	__m128d v1, v2, vMul, vRes; // Define 128bit registers.
 	
 	for (int i = 0; i < M; i++) {
 		for (int j = 0; j < N; j++) 
