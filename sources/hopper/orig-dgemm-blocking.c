@@ -51,15 +51,15 @@ void simd_dgemm( int lda, int M, int N, int K,
 		{
 			vRes = _mm_setzero_ps();
 			for (int k = 0; k < K; k+=4) {
-				v1 = _mm_load_ps(&A[k+i * lda]);
-				v2 = _mm_load_ps(&B[k+j * lda]);
-				vMul = _mm_mul_ps(v1, v2);
+				v1 = _mm_load_pd(&A[k+i * lda]);
+				v2 = _mm_load_pd(&B[k+j * lda]);
+				vMul = _mm_mul_pd(v1, v2);
 
-				vRes = _mm_add_ps(vRes, vMul);
+				vRes = _mm_add_pd(vRes, vMul);
 			}
-			vRes = _mm_hadd_ps(vRes, vRes);
-			vRes = _mm_hadd_ps(vRes, vRes);
-			_mm_store_ss(&C[i+j * lda], vRes);
+			vRes = _mm_hadd_pd(vRes, vRes);
+			vRes = _mm_hadd_pd(vRes, vRes);
+			_mm_store_sd(&C[i+j * lda], vRes);
 		}
 	}
 }
