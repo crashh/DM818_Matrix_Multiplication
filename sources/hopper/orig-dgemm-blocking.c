@@ -91,8 +91,10 @@ void do_block( int lda, double *A, double *B, double *C,
        Each iteration here, is iterating the missing indexes of the
        ones we skipped in square_dgemm. 
      */
-     //basic_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
-     simd_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
+     if (K%2 != 0)
+        basic_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
+     else
+        simd_dgemm( lda, M, N, K, A + k + i*lda, B + k + j*lda, C + i + j*lda);
 }
 
 void square_dgemm( int M, double *A, double *B, double *C )
