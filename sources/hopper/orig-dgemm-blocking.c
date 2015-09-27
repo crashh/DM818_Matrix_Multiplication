@@ -53,7 +53,7 @@ void simd_dgemm( int lda, int M, int N, int K,
 			for (int k = 0; k < K; k+=2) {
 				v1 = _mm_load_pd(&A[k+i * lda]);
 				v2 = _mm_load_pd(&B[k+j * lda]);
-				vMul = _mm_dp_pd(v1, v2);
+				vMul = _mm_mul_pd(v1, v2);
 
 				vRes = _mm_add_pd(vRes, vMul);
 			}
