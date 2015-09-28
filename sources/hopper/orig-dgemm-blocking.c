@@ -55,7 +55,6 @@ void simd_dgemm(int lda, int M, int N, int K,
 	
     __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
 
-    idx = 0;
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
