@@ -47,7 +47,7 @@ void simd_dgemm(int lda, int M, int N, int K,
     // basic_dgemm when accessing the transposed matrix.
 	double tmp[M*N]; //Might not work.
     for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
+        for (int j = 0; j < N; ++j) {
             //Save transpose in tmp
 			tmp[i+j*lda] = A[j+i*lda]; 
 		}
