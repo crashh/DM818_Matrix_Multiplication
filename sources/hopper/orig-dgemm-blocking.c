@@ -54,8 +54,8 @@ void simd_dgemm(int lda, int M, int N, int K,
 
                 vRes = _mm_add_pd(vRes, vMul);
             }
-            //vRes = _mm_hadd_pd(vRes, vRes);
-            _mm_storeu_pd(&C[i + j * lda], vRes);
+            vRes = _mm_hadd_pd(vRes, vRes);
+            _mm_storeu_sd(&C[i + j * lda], vRes);
         }
     }
 }
