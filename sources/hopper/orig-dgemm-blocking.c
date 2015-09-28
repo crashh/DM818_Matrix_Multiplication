@@ -86,7 +86,7 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
       Each iteration here, is iterating the missing indexes of the
       ones we skipped in square_dgemm.
     */
-    if (K % 2 != 0) {
+    if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
         basic_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
     } else {
         simd_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
