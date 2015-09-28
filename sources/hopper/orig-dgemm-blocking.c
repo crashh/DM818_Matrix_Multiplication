@@ -47,7 +47,7 @@ void simd_dgemm(int lda, int M, int N, int K,
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < N; ++j) {
             //Save transpose in tmp
-			tmp[i+j*k] = A[j+i*lda]; 
+			tmp[i+j*K] = A[j+i*lda]; 
 		}
 	}
 	
