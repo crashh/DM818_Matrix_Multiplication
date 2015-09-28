@@ -2,7 +2,7 @@
 # This makefile is intended for the GNU C compiler. On Franklin and Hopper, the Portland compilers are default, so you must instruct the Cray compiler wrappers to switch to GNU: type "module swap PrgEnv-pgi PrgEnv-gnu"
 # Your code must compile (with GCC) with the given CFLAGS. You may experiment with the OPT variable to invoke additional compiler options.
 
-CC = cc 
+CC = gcc 
 OPT = -O4
 CFLAGS = -Wall -std=gnu99 $(OPT) -funroll-loops -funit-at-a-time -mfpmath=sse -fstrict-aliasing -ftree-vectorize –ffast-math 
 LDFLAGS = -Wall
