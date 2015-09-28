@@ -3,8 +3,8 @@
 # Your code must compile (with GCC) with the given CFLAGS. You may experiment with the OPT variable to invoke additional compiler options.
 
 CC = cc 
-#OPT = -Og
-CFLAGS = -g -Wall -std=gnu99 #$(OPT)
+OPT = -O2
+CFLAGS = -g -Wall -std=gnu99 $(OPT)
 LDFLAGS = -Wall -funroll-loops -funit-at-a-time -march=native -mfpmath=sse -fstrict-aliasing -ftree-vectorize
 # librt is needed for clock_gettime
 LDLIBS = -lrt
@@ -26,7 +26,7 @@ benchmark-blas : benchmark.o dgemm-blas.o
 	$(CC) -o $@ $^ $(LDLIBS)
 benchmark-transpose : benchmark.o dgemm-transpose.o
 	$(CC) -o $@ $^ $(LDLIBS)
-benchmark-orig-blocking : benchmark_testcase.o orig-dgemm-blocking.o
+benchmark-orig-blocking : benchmark.o orig-dgemm-blocking.o
 	$(CC) -o $@ $^ $(LDLIBS)
 
 %.o : %.c
