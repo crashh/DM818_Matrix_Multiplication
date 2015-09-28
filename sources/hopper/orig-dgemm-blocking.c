@@ -34,7 +34,7 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
             double cij = C[i + j * lda];
             #pragma GCC ivdep
             for( int k = 0; k < K; k++ )
-                 cij += A[k+i*lda] * B[k+j*lda];
+                 cij += A[i+k*lda] * B[k+j*lda];
             C[i+j*lda] = cij;
         }
     }
@@ -42,15 +42,28 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
 
 void simd_dgemm(int lda, int M, int N, int K,
                 double *A, double *B, double *C) {
+    // Create transpose, this costs us some, but makes up in time
+    // for bigger matrices. Note that this required a small change in
+    // basic_dgemm when accessing the transposed matrix.
+	double tmp[M*N];
+	int idx = 0;
+    for (int i = 0; i < M; ++i) {
+        for (int j = 0; j < M; ++j) {
+            //Save transpose in tmp
+			tmp[idx++] = A[j+i*lda]; 
+		}
+	}
+	
     __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
 
+    idx = 0;
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&A[k + i * lda]);
-                v2 = _mm_load_pd(&B[k + j * lda]);
+                v1 = _mm_load_pd(&tmp[idx++]);
+                v2 = _mm_loadu_pd(&B[k + j * lda]);
                 vMul = _mm_mul_pd(v1, v2);
 
                 vRes = _mm_add_pd(vRes, vMul);
@@ -94,24 +107,13 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     }
 }
 
-void square_dgemm(int M, double *A, double *B, double *C) {
-    // Create transpose, this costs us some, but makes up in time
-    // for bigger matrices. Note that this required a small change in
-    // basic_dgemm when accessing the transposed matrix.
-	double tmp[M*M];
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-            //Save transpose in tmp
-			tmp[i+j*M] = A[j+i*M]; 
-		}
-	}
-	
+void square_dgemm(int M, double *A, double *B, double *C) {	
     // Now we do the original code with the transposed matrix in place of A.
     // A has to be the one transposed since the given matrices are column-major.
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < M; j += BLOCK_SIZE) {
             for (int k = 0; k < M; k += BLOCK_SIZE) {
-                do_block(M, tmp, B, C, i, j, k);
+                do_block(M, A, B, C, i, j, k);
             }
         }
     }
