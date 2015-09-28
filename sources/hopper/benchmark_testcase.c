@@ -53,7 +53,7 @@ void die (const char* message)
 void fill (double* p, int n)
 {
   for (int i = 0; i < n; ++i)
-    p[i] = 0.i;
+    p[i] = 1;
 }
 
 void absolute_value (double *p, int n)
