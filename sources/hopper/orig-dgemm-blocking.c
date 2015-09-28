@@ -36,7 +36,8 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
             for( int k = 0; k < K; k++ )
                  cij += A[i+k*lda] * B[k+j*lda];
             C[i+j*lda] = cij;
-       }
+        }
+    }
 }
 
 void simd_dgemm(int lda, int M, int N, int K,
