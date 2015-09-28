@@ -3,7 +3,7 @@
 # Your code must compile (with GCC) with the given CFLAGS. You may experiment with the OPT variable to invoke additional compiler options.
 
 CC = cc 
-OPT = -O4
+OPT = -O2
 CFLAGS = -Wall -std=gnu99 $(OPT) -funroll-loops -funit-at-a-time -mfpmath=sse -fstrict-aliasing -ftree-vectorize -ffast-math 
 LDFLAGS = -Wall
 # librt is needed for clock_gettime
