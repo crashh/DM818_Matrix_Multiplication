@@ -45,7 +45,7 @@ void simd_dgemm(int lda, int M, int N, int K,
     // Create transpose, this costs us some, but makes up in time
     // for bigger matrices. Note that this required a small change in
     // basic_dgemm when accessing the transposed matrix.
-	double tmp[M*N];
+	double tmp[M*N] __attribute__ ((aligned (16))); //Might not work.
 	int idx = 0;
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < M; ++j) {
@@ -62,7 +62,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&tmp[idx++]);
+                v1 = _mm_load_pd(&tmp[idx++]); //segfault?
                 v2 = _mm_loadu_pd(&B[k + j * lda]);
                 vMul = _mm_mul_pd(v1, v2);
 
