@@ -46,7 +46,8 @@ void simd_dgemm(int lda, int M, int N, int K,
 
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
-            vRes = _mm_setzero_pd();
+            __declspec(align(16)) double oldC[2] = {C[i+j*lda], C[i+j*lda]};
+            vRes = _mm_load_pd(oldC);
             for (int k = 0; k < K; k += 2) {
                 v1 = _mm_loadu_pd(&A[k + i * lda]);
                 v2 = _mm_loadu_pd(&B[k + j * lda]);
