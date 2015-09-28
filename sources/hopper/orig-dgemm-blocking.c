@@ -4,7 +4,6 @@
 */
 #include <x86intrin.h>
 #include <emmintrin.h>
-#include <intrin.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
