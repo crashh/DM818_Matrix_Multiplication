@@ -41,18 +41,7 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
 }
 
 void simd_dgemm(int lda, int M, int N, int K,
-                double *A, double *B, double *C) {
-    // Create transpose, this costs us some, but makes up in time
-    // for bigger matrices. Note that this required a small change in
-    // basic_dgemm when accessing the transposed matrix.
-	double tmp[M*M];
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < N; ++j) {
-            //Save transpose in tmp
-			tmp[i+j*lda] = B[j+i*lda]; 
-		}
-	}
-	
+                double *A, double *B, double *C) {	
     __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
 
     for (int i = 0; i < M; i++) {
@@ -60,7 +49,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             vRes = _mm_setzero_pd();
             for (int k = 0; k < K; k += 2) {
                 v1 = _mm_loadu_pd(&A[i + k * lda]);
-                v2 = _mm_loadu_pd(&tmp[k + j * lda]);
+                v2 = _mm_loadu_pd(&B[k + j * lda]);
                 vMul = _mm_mul_pd(v1, v2);
 
                 vRes = _mm_add_pd(vRes, vMul);
