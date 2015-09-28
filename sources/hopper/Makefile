@@ -10,7 +10,7 @@ LDFLAGS = -Wall -funroll-loops -funit-at-a-time -march=native -mfpmath=sse -fstr
 LDLIBS = -lrt
 
 targets = benchmark-naive benchmark-blocked benchmark-blas benchmark-transpose benchmark-orig-blocking
-objects = benchmark.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o dgemm-transposed.o orig-dgemm-blocking.o
+objects = benchmark.o benchmark_testcase.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o dgemm-transposed.o orig-dgemm-blocking.o
 
 .PHONY : default
 default : all
@@ -26,7 +26,7 @@ benchmark-blas : benchmark.o dgemm-blas.o
 	$(CC) -o $@ $^ $(LDLIBS)
 benchmark-transpose : benchmark.o dgemm-transpose.o
 	$(CC) -o $@ $^ $(LDLIBS)
-benchmark-orig-blocking : benchmark.o orig-dgemm-blocking.o
+benchmark-orig-blocking : benchmark_testcase.o orig-dgemm-blocking.o
 	$(CC) -o $@ $^ $(LDLIBS)
 
 %.o : %.c
