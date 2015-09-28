@@ -11,7 +11,7 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 8
+#define BLOCK_SIZE 32 //Remember to change back up to get good runtime, 32?
 #endif
 
 #define min(a, b) (((a)<(b))?(a):(b))
@@ -45,12 +45,11 @@ void simd_dgemm(int lda, int M, int N, int K,
     // Create transpose, this costs us some, but makes up in time
     // for bigger matrices. Note that this required a small change in
     // basic_dgemm when accessing the transposed matrix.
-	double tmp[M*N] __attribute__ ((aligned (16))); //Might not work.
-	int idx = 0;
+	double tmp[M*N]; //Might not work.
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < M; ++j) {
             //Save transpose in tmp
-			tmp[idx++] = A[j+i*lda]; 
+			tmp[i+j*lda] = A[j+i*lda]; 
 		}
 	}
 	
@@ -62,7 +61,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&tmp[idx++]); //segfault?
+                v1 = _mm_load_pd(&tmp[k + i * lda]); //segfault?
                 v2 = _mm_loadu_pd(&B[k + j * lda]);
                 vMul = _mm_mul_pd(v1, v2);
 
