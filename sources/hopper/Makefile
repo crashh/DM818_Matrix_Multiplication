@@ -4,7 +4,7 @@
 
 CC = cc 
 OPT = -Og
-CFLAGS = -g -Wall -std=gnu99 $(OPT)
+CFLAGS = -g -Wall -std=gnu99 #$(OPT)
 LDFLAGS = -Wall -funroll-loops -funit-at-a-time -march=native -mfpmath=sse -fstrict-aliasing -ftree-vectorize
 # librt is needed for clock_gettime
 LDLIBS = -lrt
