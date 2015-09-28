@@ -61,7 +61,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_loadu_pd(&tmp[idx]);
+                v1 = _mm_loadu_pd(tmp[idx]);
                 idx+=2;
                 v2 = _mm_loadu_pd(&B[k + j * lda]);
                 vMul = _mm_mul_pd(v1, v2);
