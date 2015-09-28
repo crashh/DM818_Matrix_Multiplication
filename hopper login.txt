@@ -1,0 +1,8 @@
+Parralel computering, Hopper login:
+-----------------------------------
+
+ssh -l crashh hopper.nersc.gov
+( skriv kodeord )
+module swap PrgEnv-pgi PrgEnv-gnu
+make
+% qsub job-
