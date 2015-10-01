@@ -110,7 +110,7 @@ void square_dgemm(int M, double *A, double *B, double *C) {
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < M; j += BLOCK_SIZE) {
             for (int k = 0; k < M; k += BLOCK_SIZE) {
-                do_block(M, tmp, B, C, i, j, k);
+                do_block(M, A, B, C, i, j, k);
             }
         }
     }
