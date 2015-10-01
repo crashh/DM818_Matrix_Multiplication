@@ -54,10 +54,11 @@ void simd_dgemm(int lda, int M, int N, int K,
     
     for (int i = 0; i < M; i++) {
     
+        // We pack chunks of A at a time: (todo)
         double aPacked[K*M] __attribute__ ((aligned(64)));
         idx = 0;
         for (int col = 0; col < K; col++) {
-            aPacked[idx++] = A[col * lda + i];
+            aPacked[idx++] = A[i + col * lda];
         }
     
         for (int j = 0; j < N; j++) {
