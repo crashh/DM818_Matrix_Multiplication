@@ -43,7 +43,7 @@ all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-transpose benchm
 
 benchmark-naive: benchmark.o dgemm-naive.o
 	$(CC) -o $@ benchmark.o dgemm-naive.o $(LIBS)
-benchmark-blocked: benchmark.o dgemm-blocked.o
+benchmark-blocked: benchmark_testcase.o dgemm-blocked.o
 	$(CC) -o $@ benchmark.o dgemm-blocked.o $(LIBS)
 benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -o $@ benchmark.o dgemm-blas.o $(LIBS)
