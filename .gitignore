@@ -31,6 +31,11 @@
 # Temp files
 *.c~
 *.cpp~
+benchmark-blas
+benchmark-blocked
+benchmark-naive
+benchmark-orig-blocking
+benchmark-transpose
 
 # Debug files
 *.dSYM/
