@@ -78,7 +78,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             vRes = _mm_hadd_pd(vRes, vRes);
             _mm_store_sd(&C[i + j * lda], vRes);
         }
-        printf("arr%i %f \n", 0, aPacked[0]);
+        //printf("arr%i %f \n", 0, aPacked[0]);
     }
 }
 
