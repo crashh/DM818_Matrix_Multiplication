@@ -34,7 +34,7 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
             double cij = C[i + j * lda];
             #pragma GCC ivdep
             for( int k = 0; k < K; k++ )
-                 cij += A[k+i*lda] * B[k+j*lda];
+                 cij += A[i+k*lda] * B[k+j*lda];
             C[i+j*lda] = cij;
         }
     }
@@ -107,17 +107,6 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
 }
 
 void square_dgemm(int M, double *A, double *B, double *C) {
-    // Create transpose:
-    // This should be moved, to inner loop.
-	double tmp[M*M];
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-			tmp[i+j*M] = A[j+i*M]; 
-		}
-	}
-	
-    // Now we do the original code with the transposed matrix in place of A.
-    // A has to be the one transposed since the given matrices are column-major.
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < M; j += BLOCK_SIZE) {
             for (int k = 0; k < M; k += BLOCK_SIZE) {
