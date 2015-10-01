@@ -51,13 +51,20 @@ void simd_dgemm(int lda, int M, int N, int K,
             bPacked[idx++] = B[col * lda + row];
         }
     }
+    double aPacked[K*M] __attribute__ ((aligned(64)));
+    idx = 0;
+    for (int col = 0; col < M; col++) {
+        for (int row = 0; row < K; row++) {
+            aPacked[idx++] = B[col + row * lda];
+        }
+    }
     
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_loadu_pd(&A[k + i * lda]);
+                v1 = _mm_load_pd(&aPacked[k + i * K]);
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
