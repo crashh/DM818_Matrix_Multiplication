@@ -53,8 +53,8 @@ void simd_dgemm(int lda, int M, int N, int K,
     }
     double aPacked[K*M] __attribute__ ((aligned(64)));
     idx = 0;
-    for (int row = 0; row < K; row++) {
-        for (int col = 0; col < M; col++) {
+    for (int row = 0; row < M; row++) {
+        for (int col = 0; col < K; col++) {
             aPacked[idx++] = A[col * lda + row];
         }
     }
