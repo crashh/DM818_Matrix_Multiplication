@@ -32,36 +32,63 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             double cij = C[i + j * lda];
-            #pragma GCC ivdep
-            for( int k = 0; k < K; k++ )
-                 cij += A[k+i*lda] * B[k+j*lda];
-            C[i+j*lda] = cij;
+#pragma GCC ivdep
+            for (int k = 0; k < K; k++)
+                cij += A[i + k * lda] * B[k + j * lda];
+            C[i + j * lda] = cij;
         }
     }
 }
 
-void simd_dgemm(int lda, int M, int N, int K,
-                double *A, double *B, double *C) {
-    __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
+/**
+ * A is M-by-K (height-by-width)
+ * B is K-by-N
+ * C is M-by-N
+ */
+void blocked_gepp(int lda, int M, int N, int K, double *A, double *B, double *C) {
+    int nr = 4; // The width of each B submatrix (Thus each submatrix will be nr * K)
 
-    for (int i = 0; i < M; i++) {
-        for (int j = 0; j < N; j++) {
-            double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
-            vRes = _mm_load_pd(cij);
-            for (int k = 0; k < K; k += 2) {
-                v1 = _mm_loadu_pd(&A[k + i * lda]);
-                v2 = _mm_loadu_pd(&B[k + j * lda]);
-                vMul = _mm_mul_pd(v1, v2);
+    // Pack B into a contiguous column-major matrix
+    // TODO inline and align and other performance stuff
+    double *bPacked = malloc(sizeof(double) * K * N + // allocate space for the part existing in B
+                                     sizeof(double) * ((N % nr) * K)); // allocate space for additional padding
+    int idx = 0;
+    for (int col = 0; col < N; col++) {
+        for (int row = 0; row < K; row++) {
+            bPacked[idx++] = B[col * lda + row];
+        }
+    }
+    for (int col = K * N; col < K * N + (N % nr) * K; col++) { // Padding
+        for (int row = 0; row < K; row++) { // TODO unroll
+            bPacked[idx++] = 0;
+        }
+    }
 
-                vRes = _mm_add_pd(vRes, vMul);
+    for (int i = 0; i < M; i += K) {
+        // Pack A[i] (i.e. the ith submatrix, not some element) into a contiguous row-major work matrix
+        double *aPacked = malloc(sizeof(double) * K * N);
+        idx = 0;
+        int rows = min(M, K);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < N; col++) {
+                aPacked[idx++] = A[col * lda + row + i];
             }
-            vRes = _mm_hadd_pd(vRes, vRes);
-            _mm_store_sd(&C[i + j * lda], vRes);
+        }
+        for (int row = M - i; row < K; row++) { // Add padding
+            for (int col = 0; col < N; col++) { // TODO Unroll
+                aPacked[idx++] = 0;
+            }
+        }
+
+        for (int j = 0; j < N; j++) {
+            // TODO Multiply A[i] * B[j]
         }
     }
 }
 
 void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
+    // TODO Change the way blocking is done, to match the Goto paper.
+
     /*
       Remember that you need to deal with the fringes in each
       dimension.
@@ -85,26 +112,15 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
         basic_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
     } else {
-        simd_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
+        blocked_gepp(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
     }
 }
 
 void square_dgemm(int M, double *A, double *B, double *C) {
-    // Create transpose:
-    // This should be moved, to inner loop.
-	double tmp[M*M];
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-			tmp[i+j*M] = A[j+i*M]; 
-		}
-	}
-	
-    // Now we do the original code with the transposed matrix in place of A.
-    // A has to be the one transposed since the given matrices are column-major.
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < M; j += BLOCK_SIZE) {
             for (int k = 0; k < M; k += BLOCK_SIZE) {
-                do_block(M, tmp, B, C, i, j, k);
+                do_block(M, A, B, C, i, j, k);
             }
         }
     }
