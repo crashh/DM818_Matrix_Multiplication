@@ -62,8 +62,8 @@ void simd_dgemm(int lda, int M, int N, int K,
             for (int col = 0; col < K; col++) {             // Entire column at a time.
                 aPacked[idx++] = A[col * lda + i];
             }
-            printf("arr0 %d",aPacked[0]);
-            printf("arr31 %d",aPacked[31]);
+            printf("arr0 %f",aPacked[0]);
+            printf("arr31 %f",aPacked[31]);
         //}
     
     
