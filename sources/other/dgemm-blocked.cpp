@@ -62,8 +62,6 @@ void simd_dgemm(int lda, int M, int N, int K,
             for (int col = 0; col < K; col++) {             // Entire column at a time.
                 aPacked[idx++] = A[col * lda + i];
             }
-            printf("arr0 %f \n",aPacked[0]);
-            printf("arr1 %f \n",aPacked[1]);
         //}
     
     
@@ -72,6 +70,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
                 v1 = _mm_load_pd(&aPacked[k]);
+                printf("arr%i %f \n", k, aPacked[k]);
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
