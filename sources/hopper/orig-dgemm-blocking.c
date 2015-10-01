@@ -50,7 +50,8 @@ void simd_dgemm(int lda, int M /* mc */, int N /* nr */, int K /* K */, double *
 
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
-            double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0}; // TODO assume correct, even though it isn't
+            double cij[2] __attribute__ ((aligned(16))) = {C[i + j * lda],
+                                                           0}; // TODO assume correct, even though it isn't
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
                 v1 = _mm_loadu_pd(&A[k + i * K]);
@@ -78,7 +79,7 @@ void blocked_gepp(int lda, int M, int N, int K, double *A, double *B, double *C)
     // TODO inline and align and other performance stuff
     int bColumns = N + (N % nr);
     int bSize = K * bColumns;
-    double *bPacked = malloc(sizeof(double) * bSize);
+    double *bPacked = (double *) malloc(sizeof(double) * bSize);
     int idx = 0;
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
@@ -93,7 +94,7 @@ void blocked_gepp(int lda, int M, int N, int K, double *A, double *B, double *C)
 
     for (int i = 0; i < M; i += mc) {
         // Pack A[i] (i.e. the ith submatrix, not some element) into a contiguous row-major work matrix
-        double *aPacked = malloc(sizeof(double) * mc * K);
+        double *aPacked = (double *) malloc(sizeof(double) * mc * K);
         idx = 0;
         int maxRow = min(i * mc + mc, M);
         for (int row = i * mc; row < maxRow; row++) {
