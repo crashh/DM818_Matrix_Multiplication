@@ -58,18 +58,18 @@ void simd_dgemm(int lda, int M, int N, int K,
         // Pack the A Matrix in parts of two:
         double aPacked[K*M] __attribute__ ((aligned(64)));
         idx = 0;
-        for (int row = i * 1; row < i+1; row++) {         // 1 rows at a time.
+        //for (int row = i * 1; row < i+1; row++) {         // 1 rows at a time.
             for (int col = 0; col < K; col++) {             // Entire column at a time.
-                aPacked[idx++] = A[col * lda + row];
+                aPacked[idx++] = A[col * lda + i];
             }
-        }
+        //}
     
     
         for (int j = 0; j < N; j++) {
             const double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&aPacked[k + i * K]);
+                v1 = _mm_load_pd(&aPacked[k]);
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
