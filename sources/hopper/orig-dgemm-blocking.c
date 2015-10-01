@@ -32,25 +32,30 @@ void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) 
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             double cij = C[i + j * lda];
-            #pragma GCC ivdep
-            for( int k = 0; k < K; k++ )
-                 cij += A[k+i*lda] * B[k+j*lda];
-            C[i+j*lda] = cij;
+#pragma GCC ivdep
+            for (int k = 0; k < K; k++)
+                cij += A[i + k * lda] * B[k + j * lda];
+            C[i + j * lda] = cij;
         }
     }
 }
 
-void simd_dgemm(int lda, int M, int N, int K,
-                double *A, double *B, double *C) {
-    __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
+/**
+ * A is M-by-K (height-by-width), and is stored in a row-major matrix
+ * B is K-by-N, and is stored and packed in a column-major matrix
+ * C is still stored as a column-major matrix, this is the output matrix.
+ */
+void simd_dgemm(int lda, int M /* mc */, int N /* nr */, int K /* K */, double *A, double *B, double *C) {
+    __m128d v1, v2, vMul, vRes; // Define 128bit registers.
 
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
-            double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
+            double cij[2] __attribute__ ((aligned(16))) = {C[i + j * lda],
+                                                           0}; // TODO assume correct, even though it isn't
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_loadu_pd(&A[k + i * lda]);
-                v2 = _mm_loadu_pd(&B[k + j * lda]);
+                v1 = _mm_loadu_pd(&A[k + i * K]);
+                v2 = _mm_loadu_pd(&B[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
                 vRes = _mm_add_pd(vRes, vMul);
@@ -61,7 +66,57 @@ void simd_dgemm(int lda, int M, int N, int K,
     }
 }
 
+/**
+ * A is M-by-K (height-by-width)
+ * B is K-by-N
+ * C is M-by-N
+ */
+void blocked_gepp(int lda, int M, int N, int K, double *A, double *B, double *C) {
+    int nr = 4; // The width of each B submatrix (Thus each submatrix will be nr * K)
+    int mc = 4; // The height of each A submatrix (This each submatrix will be mc * K)
+
+    // Pack B into a contiguous column-major matrix
+    // TODO inline and align and other performance stuff
+    int bColumns = N + (N % nr);
+    int bSize = K * bColumns;
+    double *bPacked = (double *) malloc(sizeof(double) * bSize);
+    int idx = 0;
+    for (int col = 0; col < N; col++) {
+        for (int row = 0; row < K; row++) {
+            bPacked[idx++] = B[col * lda + row];
+        }
+    }
+    for (int col = K * N; col < bSize; col++) { // Padding
+        for (int row = 0; row < K; row++) { // TODO unroll
+            bPacked[idx++] = 0;
+        }
+    }
+
+    for (int i = 0; i < M; i += mc) {
+        // Pack A[i] (i.e. the ith submatrix, not some element) into a contiguous row-major work matrix
+        double *aPacked = (double *) malloc(sizeof(double) * mc * K);
+        idx = 0;
+        int maxRow = min(i * mc + mc, M);
+        for (int row = i * mc; row < maxRow; row++) {
+            for (int col = 0; col < K; col++) {
+                aPacked[idx++] = A[col * lda + row];
+            }
+        }
+        for (int row = maxRow; row < i * mc + mc; row++) { // Add padding
+            for (int col = 0; col < K; col++) { // TODO Unroll
+                aPacked[idx++] = 0;
+            }
+        }
+
+        for (int j = 0; j < N; j++) {
+            simd_dgemm(lda, mc, nr, K, aPacked, bPacked + j * nr, C);
+        }
+    }
+}
+
 void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
+    // TODO Change the way blocking is done, to match the Goto paper.
+
     /*
       Remember that you need to deal with the fringes in each
       dimension.
@@ -85,26 +140,15 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
         basic_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
     } else {
-        simd_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
+        blocked_gepp(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
     }
 }
 
 void square_dgemm(int M, double *A, double *B, double *C) {
-    // Create transpose:
-    // This should be moved, to inner loop.
-	double tmp[M*M];
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-			tmp[i+j*M] = A[j+i*M]; 
-		}
-	}
-	
-    // Now we do the original code with the transposed matrix in place of A.
-    // A has to be the one transposed since the given matrices are column-major.
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < M; j += BLOCK_SIZE) {
             for (int k = 0; k < M; k += BLOCK_SIZE) {
-                do_block(M, tmp, B, C, i, j, k);
+                do_block(M, A, B, C, i, j, k);
             }
         }
     }
