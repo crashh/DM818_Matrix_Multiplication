@@ -63,8 +63,7 @@ void simd_dgemm(int lda, int M, int N, int K,
                 aPacked[idx++] = A[col * lda + i];
             }
             printf("arr0 %f \n",aPacked[0]);
-            printf("arr31 %f \n",aPacked[31]);
-            printf("arr0 B %f \n",bPacked[0]);
+            printf("arr1 %f \n",aPacked[1]);
         //}
     
     

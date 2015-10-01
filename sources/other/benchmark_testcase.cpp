@@ -40,7 +40,7 @@ double read_timer( )
 void fill( double *p, int n )
 {
     for( int i = 0; i < n; i++ )
-        p[i] = 2 * drand48( ) - 1;
+        p[i] = i;
 }
 
 void absolute_value( double *p, int n )
