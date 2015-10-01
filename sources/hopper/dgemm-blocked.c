@@ -52,20 +52,12 @@ void simd_dgemm(int lda, int M, int N, int K,
         }
     }
     
-    double aPacked[K*M] __attribute__ ((aligned(64)));
-    idx = 0;
-    for (int col = 0; col < K; col++) {
-        for (int row = 0; row < M; row++) {
-            aPacked[idx++] = A[col * lda + row];
-        }
-    }
-    
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             const double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&aPacked[k + i * K]);
+                v1 = _mm_load_pd(&A[k + i * K]);
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
@@ -109,7 +101,7 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
 
 void square_dgemm(int M, double *A, double *B, double *C) {
     // Create transpose:
-	double tmp[M*M];
+	double tmp[M*M] __attribute__ ((aligned(64)));;
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < M; ++j) {
 			tmp[i+j*M] = A[j+i*M]; 
