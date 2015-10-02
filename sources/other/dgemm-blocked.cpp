@@ -56,12 +56,12 @@ void simd_dgemm(int lda, int M, int N, int K,
     }
     
     int mc = 0;
+    idx = 0;
     for (int i = 0; i < M; i++) {
     
         // Pack the A Matrix in parts of two:
         double aPacked[M*K] __attribute__ ((aligned(64)));
-        idx = 0;
-        if (mc < i) {
+        if (mc < i+1) {
             for (int row = i; row < i + 2; row++) {
             mc += 1;
                 for (int col = 0; col < K; col++) {
@@ -75,7 +75,7 @@ void simd_dgemm(int lda, int M, int N, int K,
             const double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&aPacked[k]);                
+                v1 = _mm_load_pd(&aPacked[k + i * K]);                
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
