@@ -45,24 +45,36 @@ void basic_dgemm( int lda, int M, int N, int K,
 void simd_dgemm(int lda, int M, int N, int K,
                 double *A, double *B, double *C) {
     __m128d v1, v2, vMul, vRes; // Define 128bit registers.
-    
+    int mc = 4;
+       
     // Pack the B Matrix:
-    double bPacked[K*N] __attribute__ ((aligned(16)));
+    double bPacked[K*(N+(N%mc))] __attribute__ ((aligned(16)));
     int idx = 0;
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[idx++] = B[col * lda + row];
         }
     }
-
-    int mc = 4;
-    double aPacked[K*M] __attribute__ ((aligned(16)));
+    // Add padding:
+    for (int col = K * N; col < K*N+(N%mc); col++) {
+        for (int row = 0; row < K; row++) {
+            bPacked[idx++] = 0;
+        }
+    }
+    
+    double aPacked[K*(M+(M%mc))] __attribute__ ((aligned(16)));
     for (int i = 0; i < M; i+=mc) {
     
         // Pack the A Matrix::
         for (int row = i; row < i+mc; row++) {        // mc rows at a time.
             for (int col = 0; col < K; col++) {       // Entire column at a time.
                 aPacked[col + row * K] = A[col * lda + row];
+            }
+        }
+        // Add padding:
+        for (int row = i+mc; row < i+mc+(M%mc); row++) {
+            for (int col = 0; col < K; col++) {
+                aPacked[idx++] = 0;
             }
         }
     
@@ -80,7 +92,7 @@ void simd_dgemm(int lda, int M, int N, int K,
                 vRes = _mm_hadd_pd(vRes, vRes);
                 _mm_store_sd(&C[i2 + j * lda], vRes);
             }
-	}
+	    }
     }
 }
 
