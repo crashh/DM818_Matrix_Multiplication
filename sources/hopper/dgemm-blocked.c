@@ -11,53 +11,66 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 42
 #endif
 
-#define min(a, b) (((a)<(b))?(a):(b))
+#define min(a,b) (((a)<(b))?(a):(b))
 
 /*
   A is M-by-K
   B is K-by-N
   C is M-by-N
+
   lda is the leading dimension of the matrix (the M of square_dgemm).
 */
 
-void basic_dgemm(int lda, int M, int N, int K, double *A, double *B, double *C) {
-    /*
-      To optimize this, think about loop unrolling and software
-      pipelining.  Hint:  For the majority of the matmuls, you
-      know exactly how many iterations there are (the block size)...
-    */
-    for (int i = 0; i < M; i++) {
-        for (int j = 0; j < N; j++) {
-            double cij = C[i + j * lda];
-            #pragma GCC ivdep
+void basic_dgemm( int lda, int M, int N, int K,
+                  double *A, double *B, double *C )
+{
+  /*
+    To optimize this, think about loop unrolling and software
+    pipelining.  Hint:  For the majority of the matmuls, you
+    know exactly how many iterations there are (the block size)...
+  */
+  for( int i = 0; i < M; i++ )
+       for( int j = 0; j < N; j++ ) 
+       {
+            double cij = C[i+j*lda];
             for( int k = 0; k < K; k++ )
-                 cij += A[k+i*lda] * B[k+j*lda];
+                 cij += A[i+k*lda] * B[k+j*lda];
             C[i+j*lda] = cij;
-        }
-    }
+       }
 }
 
 void simd_dgemm(int lda, int M, int N, int K,
                 double *A, double *B, double *C) {
-    __m128d v1, v2, vMul, vRes; // Define 128bit registers.    
+    __m128d v1, v2, vMul, vRes; // Define 128bit registers.
     
-    double bPacked[K*N] __attribute__ ((aligned(64)));
+    // Pack the B Matrix:
+    double bPacked[K*N] __attribute__ ((aligned(16)));
     int idx = 0;
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[idx++] = B[col * lda + row];
         }
     }
-    
+
+    idx = 0;
+    double aPacked[K*M] __attribute__ ((aligned(16)));
     for (int i = 0; i < M; i++) {
+    
+        // Pack the A Matrix in parts of two:
+        for (int row = i; row < i+1; row++) {         // 1 rows at a time.
+            for (int col = 0; col < K; col++) {       // Entire column at a time.
+                aPacked[col + row * K] = A[col * lda + row];
+            }
+        }
+    
         for (int j = 0; j < N; j++) {
             const double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
             vRes = _mm_load_pd(cij);
             for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&A[k + i * lda]);
+                v1 = _mm_load_pd(&aPacked[k + i * K]);
                 v2 = _mm_load_pd(&bPacked[k + j * K]);
                 vMul = _mm_mul_pd(v1, v2);
 
@@ -93,26 +106,16 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     int K = min(BLOCK_SIZE, lda - k);
 
     if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
-        basic_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
+        basic_dgemm( lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
     } else {
-        simd_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
+        simd_dgemm(lda, M, N, K, A + i + k * lda, B + k + j * lda, C + i + j * lda);
     }
 }
 
-void square_dgemm(int M, double *A, double *B, double *C) {
-    // Create transpose:
-	double tmp[M*M] __attribute__ ((aligned(64)));
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-			tmp[i+j*M] = A[j+i*M]; 
-		}
-	}
-	
-    for (int i = 0; i < M; i += BLOCK_SIZE) {
-        for (int j = 0; j < M; j += BLOCK_SIZE) {
-            for (int k = 0; k < M; k += BLOCK_SIZE) {
-                do_block(M, tmp, B, C, i, j, k);
-            }
-        }
-    }
+void square_dgemm( int M, double *A, double *B, double *C )
+{
+     for( int i = 0; i < M; i += BLOCK_SIZE )
+          for( int j = 0; j < M; j += BLOCK_SIZE )
+               for( int k = 0; k < M; k += BLOCK_SIZE )
+                    do_block( M, A, B, C, i, j, k );
 }
