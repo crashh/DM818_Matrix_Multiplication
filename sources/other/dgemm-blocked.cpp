@@ -48,7 +48,7 @@ void simd_dgemm(int lda, int M, int N, int K,
     int mc = 4;
        
     // Pack the B Matrix:
-    double bPacked[K*N+(N%mc)] __attribute__ ((aligned(16)));
+    double bPacked[K*N+(N%mc)+1000] __attribute__ ((aligned(16)));
     int idx = 0;
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
@@ -62,7 +62,7 @@ void simd_dgemm(int lda, int M, int N, int K,
         }
     }
     
-    double aPacked[K*M+(M%mc)] __attribute__ ((aligned(16)));
+    double aPacked[K*M+(M%mc)+1000] __attribute__ ((aligned(16)));
     // Add padding:
     for (int row = K * M; row < K*M+(M%mc); row++) {
         for (int col = 0; col < K; col++) {
