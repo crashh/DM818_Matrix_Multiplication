@@ -11,7 +11,7 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 42
+#define BLOCK_SIZE 32
 #endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -55,33 +55,32 @@ void simd_dgemm(int lda, int M, int N, int K,
         }
     }
 
-    int mc = 0;
+    int mc = 4;
     double aPacked[K*M] __attribute__ ((aligned(16)));
-    for (int i = 0; i < M; i++) {
+    for (int i = 0; i < M; i+=mc) {
     
-        if (mc == i && i < M-1) {
-        // Pack the A Matrix in parts of two:
-        for (int row = i; row < i+2; row++) {         // 1 rows at a time.
+        // Pack the A Matrix::
+        for (int row = i; row < i+mc; row++) {        // mc rows at a time.
             for (int col = 0; col < K; col++) {       // Entire column at a time.
                 aPacked[col + row * K] = A[col * lda + row];
             }
-	    mc++;
         }
-	}
     
-        for (int j = 0; j < N; j++) {
-            const double cij[2] __attribute__ ((aligned (16))) = {C[i+j*lda], 0};
-            vRes = _mm_load_pd(cij);
-            for (int k = 0; k < K; k += 2) {
-                v1 = _mm_load_pd(&aPacked[k + i * K]);
-                v2 = _mm_load_pd(&bPacked[k + j * K]);
-                vMul = _mm_mul_pd(v1, v2);
+        for (int i2 = i; i2 < i+mc; i2++) {
+            for (int j = 0; j < N; j++) {
+                const double cij[2] __attribute__ ((aligned (16))) = {C[i2+j*lda], 0};
+                vRes = _mm_load_pd(cij);
+                for (int k = 0; k < K; k += 2) {
+                    v1 = _mm_load_pd(&aPacked[k + i2 * K]);
+                    v2 = _mm_load_pd(&bPacked[k + j * K]);
+                    vMul = _mm_mul_pd(v1, v2);
 
-                vRes = _mm_add_pd(vRes, vMul);
+                    vRes = _mm_add_pd(vRes, vMul);
+                }
+                vRes = _mm_hadd_pd(vRes, vRes);
+                _mm_store_sd(&C[i2 + j * lda], vRes);
             }
-            vRes = _mm_hadd_pd(vRes, vRes);
-            _mm_store_sd(&C[i + j * lda], vRes);
-        }
+	}
     }
 }
 
