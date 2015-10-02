@@ -99,5 +99,5 @@ void simd_dgemm(int lda, int M, int N, int K,
 void square_dgemm( int M, double *A, double *B, double *C )
 {
     for(int k = 0; k < M; k += BLOCK_SIZE)
-        simd_dgemm( M, M, M, BLOCK_SIZE, A+k*BLOCK_SIZE, B+k*BLOCK_SIZE*M, C+k*BLOCK_SIZE);
+        simd_dgemm( M, M, M, BLOCK_SIZE, A+k*BLOCK_SIZE, B+k*M, C+k*BLOCK_SIZE);
 }
