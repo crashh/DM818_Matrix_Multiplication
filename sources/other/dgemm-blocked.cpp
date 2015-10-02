@@ -55,16 +55,20 @@ void simd_dgemm(int lda, int M, int N, int K,
         }
     }
     
+    int mc = 0;
     for (int i = 0; i < M; i++) {
     
         // Pack the A Matrix in parts of two:
-        double aPacked[K] __attribute__ ((aligned(64)));
+        double aPacked[M*K] __attribute__ ((aligned(64)));
         idx = 0;
-        //for (int row = i * 1; row < i+1; row++) {         // 1 rows at a time.
-            for (int col = 0; col < K; col++) {             // Entire column at a time.
-                aPacked[idx++] = A[col * lda + i];
+        if (mc < i) {
+            for (int row = i; row < i + 2; row++) {
+            mc += 1;
+                for (int col = 0; col < K; col++) {
+                    aPacked[idx++] = A[col * lda + i];
+                }
             }
-        //}
+        }
     
     
         for (int j = 0; j < N; j++) {
