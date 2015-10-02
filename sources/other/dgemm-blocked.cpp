@@ -11,7 +11,7 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 22
 #endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -84,40 +84,8 @@ void simd_dgemm(int lda, int M, int N, int K,
     }
 }
 
-
-
-void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
-    /*
-      Remember that you need to deal with the fringes in each
-      dimension.
-      If the matrix is 7x7 and the blocks are 3x3, you'll have 1x3,
-      3x1, and 1x1 fringe blocks.
-            xxxoooX
-            xxxoooX
-            xxxoooX
-            oooxxxO
-            oooxxxO
-            oooxxxO
-            XXXOOOX
-      You won't get this to go fast until you figure out a `better'
-      way to handle the fringe blocks.  The better way will be more
-      machine-efficient, but very programmer-inefficient.
-    */
-    int M = min(BLOCK_SIZE, lda - i);
-    int N = min(BLOCK_SIZE, lda - j);
-    int K = min(BLOCK_SIZE, lda - k);
-
-    if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
-        basic_dgemm( lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
-    } else {
-        simd_dgemm(lda, M, N, K, A + i + k * lda, B + k + j * lda, C + i + j * lda);
-    }
-}
-
 void square_dgemm( int M, double *A, double *B, double *C )
 {
-     for( int i = 0; i < M; i += BLOCK_SIZE )
-          for( int j = 0; j < M; j += BLOCK_SIZE )
-               for( int k = 0; k < M; k += BLOCK_SIZE )
-                    do_block( M, A, B, C, i, j, k );
+    for(int k = 0; k < M; k += BLOCK_SIZE)
+        simd_dgemm( M, M, M, BLOCK_SIZE, A+k*BLOCK_SIZE, B+k*BLOCK_SIZE*M, C+k*BLOCK_SIZE);
 }
