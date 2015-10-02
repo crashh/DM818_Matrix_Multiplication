@@ -110,7 +110,7 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     if (K % 2 != 0 || M % 2 != 0 || N % 2 != 0) {
         basic_dgemm( lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
     } else {
-        simd_dgemm(lda, M, N, K, A + k + i * lda, B + k + j * lda, C + i + j * lda);
+        simd_dgemm(lda, M, N, K, A + i + k * lda, B + k + j * lda, C + i + j * lda);
     }
 }
 
