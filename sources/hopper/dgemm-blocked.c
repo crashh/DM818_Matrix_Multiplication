@@ -11,7 +11,7 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 98q:wq
 #endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -40,7 +40,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         }
     }
 
-    const int mc = 8;
+    const int mc = 28;
     double aPacked[Kpadded*M] __attribute__ ((aligned(16)));
     // Add padding to A:
     for (int col = K; col < Kpadded; col++) {
