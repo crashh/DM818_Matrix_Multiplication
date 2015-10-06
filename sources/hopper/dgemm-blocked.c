@@ -25,17 +25,23 @@ const char *dgemm_desc = "Simple blocked dgemm.";
 void simd_dgemm(const int lda, const int M, const int N, const int K,
                 const double *restrict A, double *restrict B, 
                 double *restrict C) {
-    __m128d v1, v2, vMul, vRes; // Define 128bit registers.
+    __m128d v1, v2, v3, vMul, vRes1, vRes2; // Define 128bit registers.
     const int Kpadded = (K+(K%2));    // Adjust K length to account for padding:
     
     // Pack the B Matrix:
-    double bPacked[Kpadded*N] __attribute__ ((aligned(16)));
+    double bPacked[Kpadded*(N+(N%2))] __attribute__ ((aligned(16)));
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[col * Kpadded + row] = B[col * lda + row];
         }
         // Add padding to B:
         for (int row = K; row < Kpadded; row++) {
+            bPacked[col * Kpadded + row] = 0;
+        }
+    }
+    // More padding to B:
+    for (int col = N; col < N+(N%2); col++) {
+        for (int row = 0; row < Kpadded; row++) {
             bPacked[col * Kpadded + row] = 0;
         }
     }
@@ -62,16 +68,22 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         // Now do the calculations:    
         for (int z = i; z < i+mc; z++) {
             if (z >= M) {break;}
-            for (int j = 0; j < N; j++) {
-                vRes = _mm_load_sd(&C[z+j*lda]);
+            for (int j = 0; j < N; j+=2) {   // We want to unroll this.
+                vRes1 = _mm_load_sd(&C[z+j*lda]);
+                vRes2 = _mm_load_sd(&C[z+(j+1)*lda]);
                 for (int k = 0; k < K; k += 2) {
                     v1 = _mm_load_pd(&aPacked[k + z * Kpadded]);
                     v2 = _mm_load_pd(&bPacked[k + j * Kpadded]);
+                    v3 = _mm_load_pd(&bPacked[k + (j+1) * Kpadded]);
                     vMul = _mm_mul_pd(v1, v2);
-                    vRes = _mm_add_pd(vRes, vMul);
+                    vRes1 = _mm_add_pd(vRes1, vMul);
+                    vMul = _mm_mul_pd(v1, v3);
+                    vRes2 = _mm_add_pd(vRes2, vMul);
                 }
-                vRes = _mm_hadd_pd(vRes, vRes);
-                _mm_store_sd(&C[z + j * lda], vRes);
+                vRes1 = _mm_hadd_pd(vRes1, vRes1);
+                vRes2 = _mm_hadd_pd(vRes2, vRes2);
+                _mm_store_sd(&C[z + j * lda], vRes1);
+                _mm_store_sd(&C[z + (j+1) * lda], vRes2);
             }
 	    }
     }
