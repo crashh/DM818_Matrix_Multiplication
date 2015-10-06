@@ -29,17 +29,18 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
     const int Kpadded = (K+(K%2));    // Adjust K length to account for padding:
     
     // Pack the B Matrix:
+    // TODO: Refactor this.
     double bPacked[Kpadded*(N+(N%2))] __attribute__ ((aligned(16)));
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[col * Kpadded + row] = B[col * lda + row];
         }
-        // Add padding to B:
+        // Add padding to B for extra K elements:
         for (int row = K; row < Kpadded; row++) {
             bPacked[col * Kpadded + row] = 0;
         }
     }
-    // More padding to B:
+    // More padding to B for extra N elements:
     for (int col = N; col < N+(N%2); col++) {
         for (int row = 0; row < Kpadded; row++) {
             bPacked[col * Kpadded + row] = 0;
@@ -66,9 +67,11 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         }
 
         // Now do the calculations:    
-        for (int z = i; z < i+mc; z++) {
+        for (int z = i; z < i+mc; z++) { // TODO: Should attempt to unroll this.
             if (z >= M) {break;}
-            for (int j = 0; j < N; j+=2) {   // We want to unroll this.
+            // Unrolling access to the B matrix, since it is accessed
+            // multiple time for every element in A:
+            for (int j = 0; j < N; j+=2) {
                 vRes1 = _mm_load_sd(&C[z+j*lda]);
                 vRes2 = _mm_load_sd(&C[z+(j+1)*lda]);
                 for (int k = 0; k < K; k += 2) {
