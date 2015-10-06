@@ -25,7 +25,7 @@ const char *dgemm_desc = "Simple blocked dgemm.";
 void simd_dgemm(const int lda, const int M, const int N, const int K,
                 const double *restrict A, double *restrict B, 
                 double *restrict C) {
-    __m128d v1, v2, v3, v4, vMul, vRes1, vRes2, vRes3; // Define 128bit registers.
+    __m128d vA, vB1, vB2, vB3, vMul, vRes1, vRes2, vRes3; // Define 128bit registers.
     const int Kpadded = (K+(K%2));    // Adjust K length to account for padding:
     
     // Pack the B Matrix:
@@ -71,16 +71,17 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
             for (int j = 0; j < N; j+=3) {   // We want to unroll this.
                 vRes1 = _mm_load_sd(&C[z+j*lda]);
                 vRes2 = _mm_load_sd(&C[z+(j+1)*lda]);
+                vRes3 = _mm_load_sd(&C[z+(j+2)*lda]);
                 for (int k = 0; k < K; k += 2) {
-                    v1 = _mm_load_pd(&aPacked[k + z * Kpadded]);
-                    v2 = _mm_load_pd(&bPacked[k + j * Kpadded]);
-                    v3 = _mm_load_pd(&bPacked[k + (j+1) * Kpadded]);
-                    v4 = _mm_load_pd(&bPacked[k + (j+2) * Kpadded]);
-                    vMul = _mm_mul_pd(v1, v2);
+                    vA = _mm_load_pd(&aPacked[k + z * Kpadded]);
+                    vB1 = _mm_load_pd(&bPacked[k + j * Kpadded]);
+                    vB2 = _mm_load_pd(&bPacked[k + (j+1) * Kpadded]);
+                    vB3 = _mm_load_pd(&bPacked[k + (j+2) * Kpadded]);
+                    vMul = _mm_mul_pd(vA, vB1);
                     vRes1 = _mm_add_pd(vRes1, vMul);
-                    vMul = _mm_mul_pd(v1, v3);
+                    vMul = _mm_mul_pd(vA, vB2);
                     vRes2 = _mm_add_pd(vRes2, vMul);
-                    vMul = _mm_mul_pd(v1, v4);
+                    vMul = _mm_mul_pd(vA, vB3);
                     vRes3 = _mm_add_pd(vRes3, vMul);
                 }
                 vRes1 = _mm_hadd_pd(vRes1, vRes1);
