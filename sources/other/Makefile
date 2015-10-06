@@ -37,7 +37,7 @@ LIBS = -lcblas -latlas -lpthread
 #                   (http://stackoverflow.com/questions/16064288/gcc-optimization-flags-for-matrix-vector-operations)
 # -mfpmath=sse      Small performance gain. 
 #                   (http://stackoverflow.com/questions/16064288/gcc-optimization-flags-for-matrix-vector-operations)
-CFLAGS = -O2 -funroll-loops -funit-at-a-time -mfpmath=sse -fstrict-aliasing -ftree-vectorize -ffast-math -msse3
+CFLAGS = -O2 -msse3 -mfpmath=sse -fomit-frame-pointer -funroll-loops -funit-at-a-time -fstrict-aliasing -ftree-vectorize -ffast-math
 
 all:	benchmark-naive benchmark-blocked benchmark-blas benchmark-transpose benchmark-orig-blocking
 

@@ -63,8 +63,8 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         for (int z = i; z < i+mc; z++) {
             if (z >= M) {break;}
             for (int j = 0; j < N; j++) {
-                const double cij[2] __attribute__ ((aligned(16))) = {C[z+j*lda], 0};
-                vRes = _mm_load_pd(cij);
+                const double cij __attribute__ ((aligned(16))) = C[z+j*lda];
+                vRes = _mm_load_sd(&cij);
                 for (int k = 0; k < K; k += 2) {
                     v1 = _mm_load_pd(&aPacked[k + z * Kpadded]);
                     v2 = _mm_load_pd(&bPacked[k + j * Kpadded]);
