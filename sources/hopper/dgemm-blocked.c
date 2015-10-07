@@ -28,6 +28,7 @@ void simd_dgemm_4n(const int lda, const int M, const int N, const int K,
                 double *restrict C) {
     __m128d vA, vB1, vB2, vB3, vB4, vMul, vRes1, vRes2, vRes3, vRes4; // Define 128bit registers.
     const int Kpadded = (K+(K%2));    // Adjust K length to account for padding:
+    double cAux[K*N] __attribute__ ((aligned(16)));
     
     // Pack the B Matrix:
     // TODO: Refactor this.
@@ -95,13 +96,21 @@ void simd_dgemm_4n(const int lda, const int M, const int N, const int K,
                 vRes2 = _mm_hadd_pd(vRes2, vRes2);
                 vRes3 = _mm_hadd_pd(vRes3, vRes3);       
                 vRes4 = _mm_hadd_pd(vRes4, vRes4);           
-                _mm_store_sd(&C[z + j * lda], vRes1);
-                _mm_store_sd(&C[z + (j+1) * lda], vRes2);             
-                _mm_store_sd(&C[z + (j+2) * lda], vRes3);
-                _mm_store_sd(&C[z + (j+3) * lda], vRes4);
-                
+                _mm_store_sd(&cAux[z + j * lda], vRes1);
+                _mm_store_sd(&cAux[z + (j+1) * lda], vRes2);             
+                _mm_store_sd(&cAux[z + (j+2) * lda], vRes3);
+                _mm_store_sd(&cAux[z + (j+3) * lda], vRes4);
+                // Ide: Smid resultater i en tmp C og til sidst smid 
+                // for N og M over i korrekt C matrix. (Overskydende kommer
+                // således ikke med over).
             }
 	    }
+    }
+    // Move from aux matrix to result matrix:
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+        C[i+j*lda] = cAux[i+j*K]
+        }
     }
 }
 
@@ -299,12 +308,7 @@ void do_block(int lda, double *A, double *B, double *C, int i, int j, int k) {
     int M = min(BLOCK_SIZE, lda - i);
     int N = min(BLOCK_SIZE, lda - j);
     int K = k;
-    if (N%4 == 0)
-        simd_dgemm_4n(lda, M, N, K, A + i, B + j * lda, C + i + j * lda);
-    else if (N%3 == 0)
-        simd_dgemm_3n(lda, M, N, K, A + i, B + j * lda, C + i + j * lda);
-    else    
-        simd_dgemm(lda, M, N, K, A + i, B + j * lda, C + i + j * lda);
+    simd_dgemm_4n(lda, M, N, K, A + i, B + j * lda, C + i + j * lda);
 }
 
 void square_dgemm( int M, double *A, double *B, double *C )
