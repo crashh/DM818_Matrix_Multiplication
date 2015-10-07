@@ -11,10 +11,10 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 60
+#define BLOCK_SIZE 250
 #endif
 
-#define MC 20
+#define MC 50
 #define min(a,b) (((a)<(b))?(a):(b))
 
 /*
