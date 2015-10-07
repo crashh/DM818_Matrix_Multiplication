@@ -1,0 +1,47 @@
+Description:	Simple blocked dgemm.
+
+Size: 31	Gflop/s: 3.25
+Size: 32	Gflop/s: 5
+Size: 96	Gflop/s: 3.84
+Size: 97	Gflop/s: 3.54
+Size: 127	Gflop/s: 2.87
+Size: 128	Gflop/s: 3.1
+Size: 129	Gflop/s: 3.33
+Size: 191	Gflop/s: 3.15
+Size: 192	Gflop/s: 3.2
+Size: 229	Gflop/s: 3.16
+Size: 255	Gflop/s: 2.74
+Size: 256	Gflop/s: 2.72
+Size: 257	Gflop/s: 3.15
+Size: 319	Gflop/s: 3.11
+Size: 320	Gflop/s: 3.2
+Size: 321	Gflop/s: 3.22
+Size: 417	Gflop/s: 3.14
+Size: 479	Gflop/s: 2.65
+Size: 480	Gflop/s: 2.68
+Size: 511	Gflop/s: 1.7
+Size: 512	Gflop/s: 1.72
+Size: 639	Gflop/s: 1.99
+Size: 640	Gflop/s: 2
+Size: 767	Gflop/s: 1.7
+Size: 768	Gflop/s: 1.7
+Size: 769	Gflop/s: 2.12
+Application 59805934 resources: utime ~16s, stime ~0s, Rss ~17148, inblocks ~5203, outblocks ~13313
+
+ + --------------------------------------------------------------------------
+ +        Job name: job-blocked
+ +          Job Id: 13354087.hopque01
+ +          System: hopper
+ +     Queued Time: Wed Oct  7 04:06:49 2015
+ +      Start Time: Wed Oct  7 04:07:22 2015
+ + Completion Time: Wed Oct  7 04:07:43 2015
+ +            User: crashh
+ +        MOM Host: nid04749
+ +           Queue: debug
+ +  Req. Resources: mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+ +  Used Resources: cput=00:00:00,energy_used=0,mem=0kb,vmem=0kb,walltime=00:00:23
+ +     Acct String: m947
+ +   PBS_O_WORKDIR: /global/u1/c/crashh/DM818_Matrix_Multiplication/sources/hopper
+ +     Submit Args: job-blocked
+ + --------------------------------------------------------------------------
+

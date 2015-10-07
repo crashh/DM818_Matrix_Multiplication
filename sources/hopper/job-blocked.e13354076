@@ -1,0 +1,26 @@
+Description:	Simple blocked dgemm.
+
+Size: 31	Gflop/s: 3.25
+Size: 32	Gflop/s: 4.82
+*** FAILURE *** Error in matrix multiply exceeds componentwise error bounds.
+: Operation not permitted
+Application 59805888 exit codes: 1
+Application 59805888 resources: utime ~1s, stime ~0s, Rss ~6940, inblocks ~5203, outblocks ~13312
+
+ + --------------------------------------------------------------------------
+ +        Job name: job-blocked
+ +          Job Id: 13354076.hopque01
+ +          System: hopper
+ +     Queued Time: Wed Oct  7 03:57:08 2015
+ +      Start Time: Wed Oct  7 03:58:16 2015
+ + Completion Time: Wed Oct  7 03:58:21 2015
+ +            User: crashh
+ +        MOM Host: nid04132
+ +           Queue: debug
+ +  Req. Resources: mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+ +  Used Resources: cput=00:00:00,energy_used=0,mem=0kb,vmem=0kb,walltime=00:00:07
+ +     Acct String: m947
+ +   PBS_O_WORKDIR: /global/u1/c/crashh/DM818_Matrix_Multiplication/sources/hopper
+ +     Submit Args: job-blocked
+ + --------------------------------------------------------------------------
+

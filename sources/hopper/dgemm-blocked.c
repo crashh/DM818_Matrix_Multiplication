@@ -11,9 +11,10 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 96
+#define BLOCK_SIZE 60
 #endif
 
+#define MC 20
 #define min(a,b) (((a)<(b))?(a):(b))
 
 /*
@@ -47,7 +48,7 @@ void simd_dgemm_4n(const int lda, const int M, const int N, const int K,
         }
     }
 
-    const int mc = 32;
+    const int mc = MC;
     double aPacked[Kpadded*M] __attribute__ ((aligned(16)));
     // Add padding to A:
     for (int col = K; col < Kpadded; col++) {
@@ -93,7 +94,7 @@ void simd_dgemm_4n(const int lda, const int M, const int N, const int K,
                 vRes1 = _mm_hadd_pd(vRes1, vRes1);
                 vRes2 = _mm_hadd_pd(vRes2, vRes2);
                 vRes3 = _mm_hadd_pd(vRes3, vRes3);       
-                vRes4 = _mm_hadd_pd(vRes3, vRes4);           
+                vRes4 = _mm_hadd_pd(vRes4, vRes4);           
                 _mm_store_sd(&C[z + j * lda], vRes1);
                 _mm_store_sd(&C[z + (j+1) * lda], vRes2);             
                 _mm_store_sd(&C[z + (j+2) * lda], vRes3);
@@ -135,7 +136,7 @@ void simd_dgemm_3n(const int lda, const int M, const int N, const int K,
         }
     }
 
-    const int mc = 32;
+    const int mc = MC;
     double aPacked[Kpadded*M] __attribute__ ((aligned(16)));
     // Add padding to A:
     for (int col = K; col < Kpadded; col++) {
@@ -217,7 +218,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         }
     }
 
-    const int mc = 32;
+    const int mc = MC;
     double aPacked[Kpadded*M] __attribute__ ((aligned(16)));
     // Add padding to A:
     for (int col = K; col < Kpadded; col++) {
