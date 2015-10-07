@@ -30,7 +30,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
     
     // Pack the B Matrix:
     // TODO: Refactor this.
-    double bPacked[Kpadded*(N+(N%2))] __attribute__ ((aligned(16)));
+    double bPacked[Kpadded*(N+(N%3))] __attribute__ ((aligned(16)));
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[col * Kpadded + row] = B[col * lda + row];
@@ -41,7 +41,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
         }
     }
     // More padding to B for extra N elements:
-    for (int col = N; col < N+(N%2); col++) {
+    for (int col = N; col < N+(N%3); col++) {
         for (int row = 0; row < Kpadded; row++) {
             bPacked[col * Kpadded + row] = 0;
         }
@@ -60,8 +60,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
     
         // Pack the A Matrix::
         for (int col = 0; col < K; col++) {         // Entire column at a time.
-            for (int row = i; row < i+mc; row++) {  // mc rows at a time.
-                if (row >= M) {break;}
+            for (int row = i; row < M; row++) {  // mc rows at a time.
                 aPacked[col + row * Kpadded] = A[col * lda + row];
             }
         }
@@ -71,22 +70,33 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
             if (z >= M) {break;}
             // Unrolling access to the B matrix, since it is accessed
             // multiple time for every element in A:
-            for (int j = 0; j < N; j+=2) {
+            for (int j = 0; j < N; j+=3) {
                 vRes1 = _mm_load_sd(&C[z+j*lda]);
-                vRes2 = _mm_load_sd(&C[z+(j+1)*lda]);
+                if (j+1<N)                
+                    vRes2 = _mm_load_sd(&C[z+(j+1)*lda]);
+                if (j+2<N)                
+                    vRes3 = _mm_load_sd(&C[z+(j+2)*lda]);                
                 for (int k = 0; k < K; k += 2) {
                     vA = _mm_load_pd(&aPacked[k + z * Kpadded]);
                     vB1 = _mm_load_pd(&bPacked[k + j * Kpadded]);
                     vB2 = _mm_load_pd(&bPacked[k + (j+1) * Kpadded]);
+                    vB3 = _mm_load_pd(&bPacked[k + (j+2) * Kpadded]);
                     vMul = _mm_mul_pd(vA, vB1);
                     vRes1 = _mm_add_pd(vRes1, vMul);
                     vMul = _mm_mul_pd(vA, vB2);
                     vRes2 = _mm_add_pd(vRes2, vMul);
+                    vMul = _mm_mul_pd(vA, vB3);
+                    vRes3 = _mm_add_pd(vRes3, vMul);
                 }
                 vRes1 = _mm_hadd_pd(vRes1, vRes1);
                 vRes2 = _mm_hadd_pd(vRes2, vRes2);
+                vRes3 = _mm_hadd_pd(vRes3, vRes3);                
                 _mm_store_sd(&C[z + j * lda], vRes1);
-                _mm_store_sd(&C[z + (j+1) * lda], vRes2);
+                if (j+1<N)
+                    _mm_store_sd(&C[z + (j+1) * lda], vRes2);
+                if (j+2<N)                
+                    _mm_store_sd(&C[z + (j+2) * lda], vRes3);
+                
             }
 	    }
     }
