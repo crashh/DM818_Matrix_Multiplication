@@ -1,0 +1,47 @@
+Description:	Optimised, three-loop dgemm.
+
+Size: 31	Gflop/s: 1.8
+Size: 32	Gflop/s: 1.98
+Size: 96	Gflop/s: 1.99
+Size: 97	Gflop/s: 1.96
+Size: 127	Gflop/s: 1.96
+Size: 128	Gflop/s: 1.96
+Size: 129	Gflop/s: 1.98
+Size: 191	Gflop/s: 1.99
+Size: 192	Gflop/s: 1.99
+Size: 229	Gflop/s: 1.87
+Size: 255	Gflop/s: 1.8
+Size: 256	Gflop/s: 1.68
+Size: 257	Gflop/s: 1.82
+Size: 319	Gflop/s: 1.62
+Size: 320	Gflop/s: 1.57
+Size: 321	Gflop/s: 1.62
+Size: 417	Gflop/s: 1.58
+Size: 479	Gflop/s: 1.55
+Size: 480	Gflop/s: 1.53
+Size: 511	Gflop/s: 1.54
+Size: 512	Gflop/s: 1.41
+Size: 639	Gflop/s: 1.51
+Size: 640	Gflop/s: 1.47
+Size: 767	Gflop/s: 1.44
+Size: 768	Gflop/s: 1.37
+Size: 769	Gflop/s: 1.45
+Application 59806351 resources: utime ~17s, stime ~0s, Rss ~20596, inblocks ~5192, outblocks ~13312
+
+ + --------------------------------------------------------------------------
+ +        Job name: job-transpose
+ +          Job Id: 13354203.hopque01
+ +          System: hopper
+ +     Queued Time: Wed Oct  7 04:39:16 2015
+ +      Start Time: Wed Oct  7 04:39:35 2015
+ + Completion Time: Wed Oct  7 04:39:56 2015
+ +            User: crashh
+ +        MOM Host: nid03935
+ +           Queue: debug
+ +  Req. Resources: mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+ +  Used Resources: cput=00:00:00,energy_used=0,mem=0kb,vmem=0kb,walltime=00:00:23
+ +     Acct String: m947
+ +   PBS_O_WORKDIR: /global/u1/c/crashh/DM818_Matrix_Multiplication/sources/hopper
+ +     Submit Args: job-transpose
+ + --------------------------------------------------------------------------
+

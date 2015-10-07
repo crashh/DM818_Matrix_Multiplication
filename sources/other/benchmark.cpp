@@ -62,12 +62,13 @@ int main( int argc, char **argv )
     //
     int test_sizes[] = {
         31, 32, 96, 97, 127, 128, 129, 191, 192, 229, 255, 256, 257,
-        319, 320, 321, 417, 479, 480, 511, 512, 639, 640, 767, 768, 769,
+        319, 320, 321, 417, 479, 480, 500, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 639, 640, 767, 768, 769,
     };
     
-    for( int isize = 0; isize < sizeof(test_sizes)/sizeof(test_sizes[0]); isize++ )
+    //for( int isize = 0; isize < sizeof(test_sizes)/sizeof(test_sizes[0]); isize++ )
+    for (int i = 1; i < 769; i+=3) 
     {
-        int n = test_sizes[isize];
+        int n = i;//test_sizes[isize];
 
         double *A = (double*) malloc( n * n * sizeof(double) );
         double *B = (double*) malloc( n * n * sizeof(double) );
