@@ -254,11 +254,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
                     vRes2 = _mm_add_pd(vRes2, vMul);
                 }
                 vRes1 = _mm_hadd_pd(vRes1, vRes1);
-<<<<<<< HEAD
                 vRes2 = _mm_hadd_pd(vRes2, vRes2);
-=======
-                vRes2 = _mm_hadd_pd(vRes2, vRes2);           
->>>>>>> 2cad88bdd638c50ebd424c65a10921d9c0fe808e
                 _mm_store_sd(&C[z + j * lda], vRes1);
                 _mm_store_sd(&C[z + (j+1) * lda], vRes2);
                 
