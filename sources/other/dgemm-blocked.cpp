@@ -11,10 +11,10 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 92
+#define BLOCK_SIZE 64
 #endif
 
-#define MC 20
+#define MC 64
 #define min(a,b) (((a)<(b))?(a):(b))
 
 /*
@@ -33,7 +33,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
 
     // Pack the B Matrix:
     // TODO: Refactor this.
-    double bPacked[Kpadded*(N+(N%8))] __attribute__ ((aligned(16)));
+    double bPacked[Kpadded*N] __attribute__ ((aligned(16)));
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
             bPacked[col * Kpadded + row] = B[col * lda + row];
@@ -44,7 +44,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
         }
     }
     // More padding to B for extra N elements:
-    for (int col = N; col < (N+(N%8)); col++) {
+    for (int col = N; col < N; col++) {
         for (int row = 0; row < Kpadded; row++) {
             bPacked[col * Kpadded + row] = 0;
         }
@@ -59,14 +59,15 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
     }
     
     for (int i = 0; i < M; i+=MC) {
+	const int imc = min(M,i+MC);
         // Pack the A Matrix::
         for (int col = 0; col < K; col++) {         // Entire column at a time.
-            for (int row = i; row < min(M,i+MC); row++) {  // mc rows at a time.
+            for (int row = i; row < imc; row++) {  // mc rows at a time.
                 aPacked[col + row * Kpadded] = A[col * lda + row];
             }
         }
         // Now do the calculations:    
-        for (int z = i; z < min(M,i+MC); z++) {
+        for (int z = i; z < imc; z++) {
             // Unrolling access to the B matrix, since it is accessed
             // multiple time for every element in A:
             for (int j = 0; j < N; j+=8) {
@@ -297,11 +298,11 @@ void square_dgemm (int lda, double* A, double* B, double* C)
 
 	    /* Perform individual block dgemm */
 	    if (N%8 == 0)
-            simd_dgemm_8n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            	simd_dgemm_8n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
 	    else if (N%4 == 0)
-            simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
-        else
-            simd_dgemm_2n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            	simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            else
+            	simd_dgemm_2n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
         //do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
       }
 }
