@@ -136,15 +136,25 @@ This section gives a short overview of optimization ideas followed/used. Further
 \end{itemize}
 
 \subsection{Blocking algorithm}
-Following the supplied code for the blocking algorithm, this idea was expanded upon following the \verb!Goto, K., and van de Geijn, R. A. 2008. Anatomy of High-Performance Matrix Multiplication! article.
+Following the supplied code for the blocking algorithm, this was expanded upon following the \emph{Goto, K., and van de Geijn, R. A. 2008. Anatomy of High-Performance Matrix Multiplication} article.
 
-Initially the blocking method was changed to block in slithers rather than square blocks, as illustrated below. This should take advantage of better data locality, since (atleast for the B matrix) more data would come contagiously.
+Initially the blocking method was changed to block in slithers rather than square blocks, as illustrated below. This should take advantage of better data locality, since (atleast for the B matrix) more data would come contiguously, before jumping to the next column.
 
 % todo: insert awesome image.
 
-This blocking method was later reverted due to performance issues for very large matrices, where for high K values the cache would be filled and start swapping out needed data. This can clearly be seen in the graph below.
+This blocking method was later reverted due to performance issues for very large matrices, where for high K values the cache would be filled and start swapping out needed data. This can clearly be seen in the graph below as performance decreases the higher the size of the matrix. This was unavoidable as the slithers always had K length, and even blocking with low values would eventually contain too many elements.
 
-% todo: insert graph that shows this.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\linewidth]{graph-blocked-downcurve.png}
+  \caption{Blocked slithers performance for sizes 1 to 241 with interval of 4. Block value at an absolute minimum.}
+  \centering
+  \label{fig:sub1}
+\end{figure}
+
+The reverted state would be blocked in square matrices with values for N, M and K being the BLOCK\_SIZE, except for the fringe cases.
+
+% TODO: Should we go into explaining what fringe cases is here, or is this considered trivial? Should probably ask Daniel about this.
 
 \subsection{Packing data}
 In order to improve data locality, and take advantage of loading SSE instructions, data had to be re-arranged. This required new auxiliary arrays for the packed data, aligning it for 16bytes making room for double values. Packing the data is an $O(n^2)$ operation, the cost of packing is almost identical to loading in the data in the first place, thus this cost is quickly recovered later on.
@@ -154,10 +164,34 @@ The theory behind packing data is very simple, and it is much more interesting w
 We first pack the B matrix, since we need to access majority of this matrix ???, we then pack the A matrix of \verb!mc! rows at a time... %todo
 
 \subsection{SIMD instructions}
-%ugh
+Single instruction, multiple data (SIMD) is a form of parallelism with multiple processing elements that perform the same operation on multiple data simultaneously. This means that we can multiply several numbers (2 doubles in this case) with each other at the same time. This method requires the data to be aligned when loading it, which is covered in the packing process described previously.
+
+By using SIMD instructions, we are able to cut the K iterations in half by doing two iterations at the same time with no additional cost. %true?
+
+This requires padding the K elements to an equal number of elements, a trivial but important step to keep the calculations correct.
 
 \subsection{Loop Unrolling}
-In order to exploit pipelining, loop unrolling has been performed in the inner-most matrix multiplication.
+% TODO: I need to read up a slight bit on exactly how this works, but the gist of it is correct. (What is the difference between hardware pipelning and software pipelining exactly?).
+In order to exploit pipelining, loop unrolling has been performed in the inner-most matrix multiplication. By loop unrolling the actual multiplication of the elements, the hardware is able to do several computations at once, before having to wait for the multiplication to finish and continuing the loop.
+
+% Insert code example here?
+
+%Padding:
+In order to perform loop unrolling, padding was initially used such that fringe cases would not cause the program to access data outside of the arrays. This padding was done by simply putting the value 0 into the additional elements accessed, as this would not change the correctness of the matrix multiplication.
+
+This padding resulted in performance dips for matrix sizes which did not fit into a multiplicative of the unrolled size. This behaviour is clearly seen in the figure below. The explanation for this lies in the added calculations of the zeroes, along with using an auxiliary array for the result matrix.
+
+The auxiliary array was necessary as padding the result matrix was infeasible when writing to values outside its array. This writing to a temp array and moving only the relevant entries was the best solution we could come up with.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\linewidth]{graph-blocked-padding.png}
+  \caption{Unrolling the access to the B matrix with 4, using padding to handle fringe cases.}
+  \centering
+  \label{fig:sub1}
+\end{figure}
+
+This solution was improved upon by doing an early check of the actual block size, and then calling the method best fitted for that block size, such that loop unrolling could be maximized.
 
 \chapter{Performance}
 % The reason for any odd behavior (e.g., dips) in performance.
