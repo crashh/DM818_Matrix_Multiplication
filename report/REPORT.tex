@@ -128,11 +128,11 @@ This assignment has been done in a group of two, following pair programming prin
 This section gives a short overview of optimization ideas followed/used. Further details are covered in the following subsections.
 
 \begin{itemize}
-\item Blocking matrix multiplication.
-\item Packaging data.
+\item Blocking Matrix Multiplication.
+\item Packing data.
 \item SIMD/SSE instructions.
-\item Loop unrolling
-\item ? moar stuff! %(todo)
+\item Loop unrolling.
+\item Compiler flags.
 \end{itemize}
 
 \subsection{Blocking algorithm}
@@ -140,7 +140,7 @@ Following the supplied code for the blocking algorithm, this was expanded upon f
 
 Initially the blocking method was changed to block in slithers rather than square blocks, as illustrated below. This should take advantage of better data locality, since (atleast for the B matrix) more data would come contiguously, before jumping to the next column.
 
-% todo: insert awesome image.
+% TODO: insert awesome image.
 
 This blocking method was later reverted due to performance issues for very large matrices, where for high K values the cache would be filled and start swapping out needed data. This can clearly be seen in the graph below as performance decreases the higher the size of the matrix. This was unavoidable as the slithers always had K length, and even blocking with low values would eventually contain too many elements.
 
@@ -157,11 +157,11 @@ The reverted state would be blocked in square matrices with values for N, M and 
 % TODO: Should we go into explaining what fringe cases is here, or is this considered trivial? Should probably ask Daniel about this.
 
 \subsection{Packing data}
-In order to improve data locality, and take advantage of loading SSE instructions, data had to be re-arranged. This required new auxiliary arrays for the packed data, aligning it for 16bytes making room for double values. Packing the data is an $O(n^2)$ operation, the cost of packing is almost identical to loading in the data in the first place, thus this cost is quickly recovered later on.
+In order to improve data locality, and take advantage of loading SSE instructions, data had to be re-arranged. This required new auxiliary arrays for the packed data, aligning it for 16bytes (the size of a double). The cost of packing is almost identical to loading in the data in the first place, thus this cost is quickly recovered later on.
 
-The theory behind packing data is very simple, and it is much more interesting when to do this. 
+The theory behind packing data is very simple, and it is much more interesting when to do this in order to exploit having the data available later on. 
 
-We first pack the B matrix, since we need to access majority of this matrix ???, we then pack the A matrix of \verb!mc! rows at a time... %todo
+We first pack the entire B matrix, and then pack the A matrix in slivers of size $mc$. The order of this packaging ensures that the relevant $mc$ rows of the A matrix is always in memory along with most, if not all, of the B matrix too. By packing slivers of the A matrix we are able to increase the block size in general and still keep it all in memory. The idea behind this is that when we load in the next sliver of A, the least recently used data will be the old A matrix. %TODO: I need to rewrite this section.
 
 \subsection{SIMD instructions}
 Single instruction, multiple data (SIMD) is a form of parallelism with multiple processing elements that perform the same operation on multiple data simultaneously. This means that we can multiply several numbers (2 doubles in this case) with each other at the same time. This method requires the data to be aligned when loading it, which is covered in the packing process described previously.
@@ -194,25 +194,26 @@ The auxiliary array was necessary as padding the result matrix was infeasible wh
 This solution was improved upon by doing an early check of the actual block size, and then calling the method best fitted for that block size, such that loop unrolling could be maximized.
 
 \chapter{Performance}
-% The reason for any odd behavior (e.g., dips) in performance.
-
 % How the same kernel performs on a different hardware platform (and a small discussion of that)
-
-% A figure fhat shows the performance similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor core of NERSC Hopper cluster (y-axis should say percentage of peak performace).
-
-% A figure fhat shows the performace similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor of another system of your choice (using the same kernel). 
-
-% Explain how you determined the peak performace, and again, the y-axis should say percentage of peak performance.
+% TODO: Need to test this, Hooper VS Imada, and how the different architectures are (since this is the primary reason for variation).
 
 \section{Hopper}
 \subsection{Graphs}
+% A figure fhat shows the performance similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor core of NERSC Hopper cluster (y-axis should say percentage of peak performace).
 \subsection{Odd behaviours}
+% The reason for any odd behavior (e.g., dips) in performance.
+
 \subsection{Peak performance}
+% Explain how you determined the peak performace, and again, the y-axis should say percentage of peak performance.
+
 
 \section{Imada machines}
 \subsection{Graphs}
+% A figure fhat shows the performace similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor of another system of your choice (using the same kernel). 
 
 \chapter{Conclusion}
+% A short recap of what we achieved and the results.
+
 
 %-----------------------------------------------------------------
 %						     APPENDIX
