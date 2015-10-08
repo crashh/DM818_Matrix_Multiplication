@@ -297,7 +297,7 @@ void square_dgemm (int lda, double* A, double* B, double* C)
 
 	    /* Perform individual block dgemm */
 	    if (N%8)
-            simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            simd_dgemm_8n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
 	    else if (N%4)
             simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
         else
