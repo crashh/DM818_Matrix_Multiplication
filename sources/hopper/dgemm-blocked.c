@@ -11,10 +11,10 @@
 const char *dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 92
+#define BLOCK_SIZE 64
 #endif
 
-#define MC 20
+#define MC 64
 #define min(a,b) (((a)<(b))?(a):(b))
 
 /*
@@ -297,11 +297,11 @@ void square_dgemm (int lda, double* A, double* B, double* C)
 
 	    /* Perform individual block dgemm */
 	    if (N%8 == 0)
-            simd_dgemm_8n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            	simd_dgemm_8n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
 	    else if (N%4 == 0)
-            simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
-        else
-            simd_dgemm_2n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            	simd_dgemm_4n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+            else
+            	simd_dgemm_2n(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
         //do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
       }
 }
