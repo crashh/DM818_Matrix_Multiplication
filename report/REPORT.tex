@@ -1,0 +1,145 @@
+\documentclass[a4paper,11pt,oneside]{book}
+
+\usepackage[english]{babel}
+\usepackage[showframe=false]{geometry}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{changepage}
+\usepackage[]{algorithm2e}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{verbatimbox}
+\usepackage{ulem}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[parfill]{parskip}
+\usepackage{tikz}
+\usepackage{pdflscape}
+\usepackage{minted}
+\usepackage{titlesec}
+\usepackage{titleps}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{etoolbox}
+%Following overwrites the page style for chapters
+\patchcmd{\chapter}{\thispagestyle{plain}}{\thispagestyle{ruledChapter}}{}{}
+
+%New page style for chapters
+\newpagestyle{ruledChapter}{
+	\setfoot{}{\thepage\ of \pageref{LastPage}}{}
+	\footrule
+	\renewcommand\makefootrule{\color{black}\rule[\baselineskip]{\linewidth}{0.4pt}}
+}
+%New page style for rest
+\newpagestyle{ruled}{
+	\sethead{\raggedright \chaptername\ \thechapter :\ \chaptertitle}{}{}
+	\headrule
+	\setfoot{}{\thepage\ of \pageref{LastPage}}{}
+	\footrule
+	\renewcommand\makeheadrule{\color{black}\rule[-.3\baselineskip]{\linewidth}{0.4pt}}
+	\renewcommand\makefootrule{\color{black}\rule[\baselineskip]{\linewidth}{0.4pt}}
+}
+
+\expandafter\def\csname PY@tok@err\endcsname{}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+
+\title{}
+\author{}
+\date{} 
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+
+%-----------------------------------------------------------------
+%							FRONTPAGE
+%-----------------------------------------------------------------
+\thispagestyle{empty}
+\includegraphics[width=0.55\textwidth]{logo.pdf}\\[1cm]    
+\textsc{\Large DM818 Assignment 1}\\[0.5cm]
+
+% Title
+\begin{Huge}
+\textbf{Matrix Multiplication}
+\end{Huge}
+
+\vspace{4cm}
+
+% Author and supervisor
+\begin{minipage}{1\textwidth}
+\begin{center}
+\emph{}\\
+
+Dan \textsc{Sebastian Thrane}\\
+\verb!<dathr12@student.sdu.dk>!\\
+
+Lars \textsc{Thomasen}\\
+\verb!<latho12@student.sdu.dk>!\\
+
+\end{center}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\end{minipage}
+
+\vfill
+\begin{tabular}{ll}
+    Aligned SSE: yes \\
+    Unaligned SSE: no \\
+\end{tabular}
+\vfill
+
+% Bottom of the page
+{\large Fall 2015}\\
+
+\end{center}
+\end{titlepage}
+
+%-----------------------------------------------------------------
+%							   TOC
+%-----------------------------------------------------------------
+\renewcommand{\contentsname}{Table of Contents}
+\tableofcontents
+\thispagestyle{empty}
+
+%-----------------------------------------------------------------
+%						  ACTUAL REPORT
+%-----------------------------------------------------------------
+\pagestyle{ruled}
+\chapter{Introduction}
+% Who did what, but this was just pair programming!
+\setcounter{section}{1}
+
+\chapter{Optimizations}
+% The optimizations used or attempted
+% The results of those optimizations
+
+\chapter{Performance}
+% The reason for any odd behavior (e.g., dips) in performance.
+
+% How the same kernel performs on a different hardware platform (and a small discussion of that)
+
+% A figure fhat shows the performance similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor core of NERSC Hopper cluster (y-axis should say percentage of peak performace).
+
+% A figure fhat shows the performace similar than the figure above, but using all matrix sizes 2, 3, 4, ..., 769 for a single processor of another system of your choice (using the same kernel). 
+
+% Explain how you determined the peak performace, and again, the y-axis should say percentage of peak performance.
+
+\chapter{Conclusion}
+
+%-----------------------------------------------------------------
+%						     APPENDIX
+%-----------------------------------------------------------------
+\newpage
+\newgeometry{left=2.5cm,right=2.5cm}
+\chapter{Appendix}
+\section{Source code}
+
+\end{document}
