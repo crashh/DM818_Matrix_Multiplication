@@ -122,7 +122,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
                 _mm_store_sd(&C[(z+(j+4)*lda)], vRes5);
                 _mm_store_sd(&C[(z+(j+5)*lda)], vRes6);
                 _mm_store_sd(&C[(z+(j+6)*lda)], vRes7);
-                _mm_store_sd(&C[(z+(j+8)*lda)], vRes8);
+                _mm_store_sd(&C[(z+(j+7)*lda)], vRes8);
             }
 	    }
     }
