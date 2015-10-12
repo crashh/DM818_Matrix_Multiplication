@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "cloak.h"
 
 const char *dgemm_desc = "Simple blocked dgemm.";
 
@@ -192,6 +191,10 @@ inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
     _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
 )
 
+#define DO_TWICE(body) (                                                    \
+    body(0); body(1);                                                       \
+)
+
 void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
                    const double *restrict A, double *restrict B,
                    double *restrict C) {
@@ -222,7 +225,7 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
             // Unrolling access to the B matrix, since it is accessed
             // multiple time for every element in A:
             for (int j = 0; j < N; j += 2) {
-                EVAL(REPEAT(2, LOAD_RES_REGISTER, ~));
+                DO_TWICE(LOAD_B_VECTOR);
                 for (int k = 0; k < K; k += 2) {
                     vA = _mm_load_pd(&aPacked[k + z * kPadded]);
                     LOAD_B_VECTOR(0);
