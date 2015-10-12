@@ -179,18 +179,19 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
 }
 
 void square_dgemm(int lda, double *A, double *B, double *C) {
-    /* For each block-row of A */
-    for (int i = 0; i < lda; i += BLOCK_SIZE)
-        /* For each block-column of B */
-        for (int j = 0; j < lda; j += BLOCK_SIZE)
-            /* Accumulate block dgemms into block of C */
+    // For each block-row of A
+    for (int i = 0; i < lda; i += BLOCK_SIZE) {
+        // For each block-column of B
+        for (int j = 0; j < lda; j += BLOCK_SIZE) {
+            // Accumulate block dgemms into block of C
             for (int k = 0; k < lda; k += BLOCK_SIZE) {
-                /* Correct block dimensions if block "goes off edge of" the matrix */
+                // Correct block dimensions if block "goes off edge of"
+                // the matrix
                 int M = min(BLOCK_SIZE, lda - i);
                 int N = min(BLOCK_SIZE, lda - j);
                 int K = min(BLOCK_SIZE, lda - k);
 
-                /* Perform individual block dgemm */
+                // Perform individual block dgemm
                 if (N % 8 == 0) {
                     simd_dgemm_8n(lda, M, N, K, A + i + k * lda,
                                   B + k + j * lda, C + i + j * lda);
@@ -198,6 +199,7 @@ void square_dgemm(int lda, double *A, double *B, double *C) {
                     simd_dgemm_2n(lda, M, N, K, A + i + k * lda,
                                   B + k + j * lda, C + i + j * lda);
                 }
-                //do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
             }
+        }
+    }
 }
