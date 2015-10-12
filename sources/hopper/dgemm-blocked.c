@@ -129,7 +129,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
     }
 }
 
-void pack_B_matrix(double *restrict bPacked, const int N, const int K,
+inline void pack_B_matrix(double *restrict bPacked, const int N, const int K,
                    const int kPadded, const int lda, const double *restrict B) {
     for (int col = 0; col < N; col++) {
         for (int row = 0; row < K; row++) {
@@ -148,7 +148,7 @@ void pack_B_matrix(double *restrict bPacked, const int N, const int K,
     }
 }
 
-void pack_A_matrix(double *restrict aPacked, const int K, const int M,
+inline void pack_A_matrix(double *restrict aPacked, const int K, const int M,
                    const int kPadded, const int lda, const int i,
                    const double *restrict A) {
     // Entire column at a time.
@@ -160,7 +160,7 @@ void pack_A_matrix(double *restrict aPacked, const int K, const int M,
     }
 }
 
-void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
+inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
                       const int kPadded, const int lda) {
     // Add padding to A:
     for (int col = K; col < kPadded; col++) {
