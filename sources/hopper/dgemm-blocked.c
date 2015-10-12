@@ -38,6 +38,10 @@ const char *dgemm_desc = "Simple blocked dgemm.";
     _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
 )
 
+#define STORE_DIRECTLY_IN_C(offset) (                                       \
+    _mm_store_sd(&C[(z + (j + offset) * lda)], vRes ## offset)              \
+)
+
 #define DEF_B_REGISTER(offset)                                              \
     __m128d vB ## offset
 
@@ -110,10 +114,6 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
     // Adjust K length to account for padding
     const int kPadded = (K + (K % 2));
 
-    // We use an auxiliary matrix for C, to avoid having to do length checks in
-    // the actual output matrix
-    double cAux[N + 4] __attribute__ ((aligned(16)));
-
     double bPacked[kPadded * N] __attribute__ ((aligned(16)));
     pack_B_matrix(bPacked, N, K, kPadded, lda, B);
 
@@ -122,11 +122,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
 
     for (int i = 0; i < M; i += MC) {
         pack_A_matrix(aPacked, K, M, kPadded, lda, i, A);
-
-        // Now do the calculations:
         for (int z = i; z < min(M, i + MC); z++) {
-            // Unrolling access to the B matrix, since it is accessed
-            // multiple time for every element in A:
             for (int j = 0; j < N; j += 2) {
                 REPEAT_8N(LOAD_RES_REGISTER);
                 for (int k = 0; k < K; k += 2) {
@@ -135,12 +131,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
                     REPEAT_8N(MUL_ADD);
                 }
                 REPEAT_8N(HADD);
-                REPEAT_8N(STORE_IN_C_AUX);
-            }
-
-            // Move from aux matrix to result matrix
-            for (int j = 0; j < N; j++) {
-                C[z + j * lda] = cAux[j];
+                REPEAT_8N(STORE_DIRECTLY_IN_C);
             }
         }
     }
@@ -169,11 +160,7 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
 
     for (int i = 0; i < M; i += MC) {
         pack_A_matrix(aPacked, K, M, kPadded, lda, i, A);
-
-        // Now do the calculations:    
         for (int z = i; z < min(M, i + MC); z++) {
-            // Unrolling access to the B matrix, since it is accessed
-            // multiple time for every element in A:
             for (int j = 0; j < N; j += 2) {
                 REPEAT_2N(LOAD_RES_REGISTER);
                 for (int k = 0; k < K; k += 2) {
@@ -184,8 +171,6 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
                 REPEAT_2N(HADD);
                 REPEAT_2N(STORE_IN_C_AUX);
             }
-
-            // Move from aux matrix to result matrix
             for (int j = 0; j < N; j++) {
                 C[z + j * lda] = cAux[j];
             }
