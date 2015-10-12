@@ -191,14 +191,13 @@ inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
     _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
 )
 
-#define REPEAT_2N(body) {                                                   \
-    body(0); body(1);                                                       \
-}
+#define REPEAT_2N(body)                                                     \
+    body(0); body(1);
 
-#define REPEAT_8N(body) {                                                   \
+#define REPEAT_8N(body)                                                     \
     body(0); body(1); body(2); body (3);                                    \
-    body(4); body(5); body(6); body (7);                                    \
-}
+    body(4); body(5); body(6); body (7);
+
 
 #define DEF_B_REGISTER(offset)                                              \
     __m128d vB ## offset
