@@ -175,7 +175,7 @@ inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
 )
 
 #define LOAD_B_VECTOR(offset) (                                             \
-    vB ## offset = &bPacked[k + (j + offset) * kPadded]                     \
+    vB ## offset = _mm_load_pd(&bPacked[k + (j + offset) * kPadded])        \
 )
 
 #define MUL_ADD(offset) {                                                   \
