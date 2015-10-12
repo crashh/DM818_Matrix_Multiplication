@@ -17,6 +17,82 @@ const char *dgemm_desc = "Simple blocked dgemm.";
 #define MC 64
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
+#define LOAD_RES_REGISTER(offset) (                                         \
+    vRes ## offset = _mm_load_sd(&C[z + (j + offset) * lda])                \
+)
+
+#define LOAD_B_VECTOR(offset) (                                             \
+    vB ## offset = _mm_load_pd(&bPacked[k + (j + offset) * kPadded])        \
+)
+
+#define MUL_ADD(offset) {                                                   \
+    vMul = _mm_mul_pd(vA, vB ## offset);                                    \
+    vRes ## offset = _mm_add_pd(vRes ## offset, vMul);                      \
+}
+
+#define HADD(offset) (                                                      \
+    vRes ## offset = _mm_hadd_pd(vRes ## offset, vRes ## offset)            \
+)
+
+#define STORE_IN_C_AUX(offset) (                                            \
+    _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
+)
+
+#define DEF_B_REGISTER(offset)                                              \
+    __m128d vB ## offset
+
+#define DEF_RES_REGISTER(offset)                                            \
+    __m128d vRes ## offset
+
+#define REPEAT_2N(body)                                                     \
+    body(0); body(1);
+
+#define REPEAT_8N(body)                                                     \
+    body(0); body(1); body(2); body (3);                                    \
+    body(4); body(5); body(6); body (7);
+
+inline void pack_B_matrix(double *restrict bPacked, const int N, const int K,
+                          const int kPadded, const int lda,
+                          const double *restrict B) {
+    for (int col = 0; col < N; col++) {
+        for (int row = 0; row < K; row++) {
+            bPacked[col * kPadded + row] = B[col * lda + row];
+        }
+        // Add padding to B for extra K elements:
+        for (int row = K; row < kPadded; row++) {
+            bPacked[col * kPadded + row] = 0;
+        }
+    }
+    // More padding to B for extra N elements:
+    for (int col = N; col < (N + (N % 4)); col++) {
+        for (int row = 0; row < kPadded; row++) {
+            bPacked[col * kPadded + row] = 0;
+        }
+    }
+}
+
+inline void pack_A_matrix(double *restrict aPacked, const int K, const int M,
+                          const int kPadded, const int lda, const int i,
+                          const double *restrict A) {
+    // Entire column at a time.
+    for (int col = 0; col < K; col++) {
+        // mc rows at a time.
+        for (int row = i; row < min(M, i + MC); row++) {
+            aPacked[col + row * kPadded] = A[col * lda + row];
+        }
+    }
+}
+
+inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
+                             const int kPadded, const int lda) {
+    // Add padding to A:
+    for (int col = K; col < kPadded; col++) {
+        for (int row = 0; row < M; row++) {
+            aPacked[col + row * kPadded] = 0;
+        }
+    }
+}
+
 /*
   A is M-by-K
   B is K-by-N
@@ -69,81 +145,6 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
         }
     }
 }
-
-inline void pack_B_matrix(double *restrict bPacked, const int N, const int K,
-                   const int kPadded, const int lda, const double *restrict B) {
-    for (int col = 0; col < N; col++) {
-        for (int row = 0; row < K; row++) {
-            bPacked[col * kPadded + row] = B[col * lda + row];
-        }
-        // Add padding to B for extra K elements:
-        for (int row = K; row < kPadded; row++) {
-            bPacked[col * kPadded + row] = 0;
-        }
-    }
-    // More padding to B for extra N elements:
-    for (int col = N; col < (N + (N % 4)); col++) {
-        for (int row = 0; row < kPadded; row++) {
-            bPacked[col * kPadded + row] = 0;
-        }
-    }
-}
-
-inline void pack_A_matrix(double *restrict aPacked, const int K, const int M,
-                   const int kPadded, const int lda, const int i,
-                   const double *restrict A) {
-    // Entire column at a time.
-    for (int col = 0; col < K; col++) {
-        // mc rows at a time.
-        for (int row = i; row < min(M, i + MC); row++) {
-            aPacked[col + row * kPadded] = A[col * lda + row];
-        }
-    }
-}
-
-inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
-                      const int kPadded, const int lda) {
-    // Add padding to A:
-    for (int col = K; col < kPadded; col++) {
-        for (int row = 0; row < M; row++) {
-            aPacked[col + row * kPadded] = 0;
-        }
-    }
-}
-
-#define LOAD_RES_REGISTER(offset) (                                         \
-    vRes ## offset = _mm_load_sd(&C[z + (j + offset) * lda])                \
-)
-
-#define LOAD_B_VECTOR(offset) (                                             \
-    vB ## offset = _mm_load_pd(&bPacked[k + (j + offset) * kPadded])        \
-)
-
-#define MUL_ADD(offset) {                                                   \
-    vMul = _mm_mul_pd(vA, vB ## offset);                                    \
-    vRes ## offset = _mm_add_pd(vRes ## offset, vMul);                      \
-}
-
-#define HADD(offset) (                                                      \
-    vRes ## offset = _mm_hadd_pd(vRes ## offset, vRes ## offset)            \
-)
-
-#define STORE_IN_C_AUX(offset) (                                            \
-    _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
-)
-
-#define DEF_B_REGISTER(offset)                                              \
-    __m128d vB ## offset
-
-#define DEF_RES_REGISTER(offset)                                            \
-    __m128d vRes ## offset
-
-#define REPEAT_2N(body)                                                     \
-    body(0); body(1);
-
-#define REPEAT_8N(body)                                                     \
-    body(0); body(1); body(2); body (3);                                    \
-    body(4); body(5); body(6); body (7);
 
 void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
                    const double *restrict A, double *restrict B,
