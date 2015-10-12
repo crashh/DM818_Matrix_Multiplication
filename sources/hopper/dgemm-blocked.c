@@ -170,7 +170,7 @@ inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
     }
 }
 
-#define LOAD_RES_REGISTER(offset, _) (                                      \
+#define LOAD_RES_REGISTER(offset) (                                         \
     vRes ## offset = _mm_load_sd(&C[z + (j + offset) * lda])                \
 )
 
