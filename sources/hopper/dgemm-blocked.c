@@ -191,17 +191,28 @@ inline void prepare_A_matrix(double *restrict aPacked, const int K, const int M,
     _mm_store_sd(&cAux[j + offset], vRes ## offset)                         \
 )
 
-#define DO_TWICE(body) (                                                    \
+#define REPEAT_2N(body) {                                                   \
     body(0); body(1);                                                       \
-)
+}
+
+#define REPEAT_8N(body) {                                                   \
+    body(0); body(1); body(2); body (3);                                    \
+    body(4); body(5); body(6); body (7);                                    \
+}
+
+#define DEF_B_REGISTER(offset)                                              \
+    __m128d vB ## offset
+
+#define DEF_RES_REGISTER(offset)                                            \
+    __m128d vRes ## offset
 
 void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
                    const double *restrict A, double *restrict B,
                    double *restrict C) {
     // Define the registers needed for SSE computations
     __m128d vA, vMul;
-    __m128d vB0, vB1;
-    __m128d vRes0, vRes1;
+    REPEAT_2N(DEF_B_REGISTER);
+    REPEAT_2N(DEF_RES_REGISTER);
 
     // Adjust K length to account for padding
     const int kPadded = (K + (K % 2));
@@ -213,7 +224,6 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
     double bPacked[kPadded * (N + (N % 4))] __attribute__ ((aligned(16)));
     pack_B_matrix(bPacked, N, K, kPadded, lda, B);
 
-    //tmp addon
     double aPacked[kPadded * M] __attribute__ ((aligned(16)));
     prepare_A_matrix(aPacked, K, M, kPadded, lda);
 
@@ -225,18 +235,14 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
             // Unrolling access to the B matrix, since it is accessed
             // multiple time for every element in A:
             for (int j = 0; j < N; j += 2) {
-                DO_TWICE(LOAD_RES_REGISTER);
+                REPEAT_2N(LOAD_RES_REGISTER);
                 for (int k = 0; k < K; k += 2) {
                     vA = _mm_load_pd(&aPacked[k + z * kPadded]);
-                    LOAD_B_VECTOR(0);
-                    LOAD_B_VECTOR(1);
-                    MUL_ADD(0);
-                    MUL_ADD(1);
+                    REPEAT_2N(LOAD_B_VECTOR);
+                    REPEAT_2N(MUL_ADD);
                 }
-                HADD(0);
-                HADD(1);
-                STORE_IN_C_AUX(0);
-                STORE_IN_C_AUX(1);
+                REPEAT_2N(HADD);
+                REPEAT_2N(STORE_IN_C_AUX);
             }
 
             // Move from aux matrix to result matrix
