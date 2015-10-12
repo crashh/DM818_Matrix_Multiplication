@@ -225,7 +225,7 @@ void simd_dgemm_2n(const int lda, const int M, const int N, const int K,
             // Unrolling access to the B matrix, since it is accessed
             // multiple time for every element in A:
             for (int j = 0; j < N; j += 2) {
-                DO_TWICE(LOAD_B_VECTOR);
+                DO_TWICE(LOAD_RES_REGISTER);
                 for (int k = 0; k < K; k += 2) {
                     vA = _mm_load_pd(&aPacked[k + z * kPadded]);
                     LOAD_B_VECTOR(0);
