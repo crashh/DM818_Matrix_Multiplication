@@ -123,7 +123,7 @@ void simd_dgemm_8n(const int lda, const int M, const int N, const int K,
     for (int i = 0; i < M; i += MC) {
         pack_A_matrix(aPacked, K, M, kPadded, lda, i, A);
         for (int z = i; z < min(M, i + MC); z++) {
-            for (int j = 0; j < N; j += 2) {
+            for (int j = 0; j < N; j += 8) {
                 REPEAT_8N(LOAD_RES_REGISTER);
                 for (int k = 0; k < K; k += 2) {
                     vA = _mm_load_pd(&aPacked[k + z * kPadded]);
