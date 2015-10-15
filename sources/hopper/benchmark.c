@@ -89,11 +89,11 @@ int main (int argc, char **argv)
   if (buf == NULL) die ("failed to allocate largest problem size");
 
   /* For each test size */
-  for( int isize = 0; isize < sizeof(test_sizes)/sizeof(test_sizes[0]); isize++ )
-    //for (int i = 1; i < 769; i+=3) 
+  //for( int isize = 0; isize < sizeof(test_sizes)/sizeof(test_sizes[0]); isize++ )
+    for (int i = 2; i < 770; i+=1) 
     {
-        //int n = i;
-        int n = test_sizes[isize];
+        int n = i;
+        //int n = test_sizes[isize];
 
     double* A = buf + 0;
     double* B = A + nmax*nmax;
