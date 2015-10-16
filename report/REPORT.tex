@@ -301,6 +301,8 @@ this was still better than going with approach 1.
 % all matrix sizes 2, 3, 4, ..., 769 for a single processor core of NERSC Hopper
 % cluster (y-axis should say percentage of peak performace).
 
+Below is a graph comparing the different algorithms. The Naive, Transposed, and BLAS algorithms are the one from the assignment. The Blocked algorithm is the implementation following the precious sections. All have been run on hopper, scheduled with a single node.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{comparison-graph.png}
@@ -310,20 +312,30 @@ this was still better than going with approach 1.
 \end{figure}
 
 \subsection{Odd Behaviours}
-
 % The reason for any odd behavior (e.g., dips) in performance.
+The constant variation in the blocked algorithm comes from the different matrix sizes. The peaks are whenever the matrix fringe cases are non-existent. Thus the matrix has $Size%BLOCK_SIZE == 0$. % Er ikke engang helt sikker på dette er den eneste grund.
 
 \subsection{Peak Performance}
-
 % Explain how you determined the peak performace, and again, the y-axis should
 % say percentage of peak performance.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{peak-graph.png}
+  \caption{Comparing different algorithms with our implementation. The Blocked is the performance we arrived at.}
+  \centering
+  \label{fig:sub1}
+\end{figure}
+
+The average peak-performance across sizes 2 to 769 is $55,235%$.
+
 \section{IMADA Machines}
 \subsection{Graphs}
-
 % A figure fhat shows the performace similar than the figure above, but using
 % all matrix sizes 2, 3, 4, ..., 769 for a single processor of another system of
 % your choice (using the same kernel).
+
+Below is a graph like the previous, but instead run on the Imada terminal room.
 
 \begin{figure}[H]
   \centering
