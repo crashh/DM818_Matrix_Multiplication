@@ -52,8 +52,8 @@ const char *dgemm_desc = "Simple blocked dgemm.";
     body(0); body(1);
 
 #define REPEAT_8N(body)                                                     \
-    body(0); body(1); body(2); body (3);                                    \
-    body(4); body(5); body(6); body (7);
+    body(0); body(1); body(2); body(3);                                     \
+    body(4); body(5); body(6); body(7);
 
 inline void pack_B_matrix(double *__restrict bPacked, const int N, const int K,
                           const int kPadded, const int lda,
