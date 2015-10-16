@@ -34,7 +34,6 @@
 benchmark-blas
 benchmark-blocked
 benchmark-naive
-benchmark-orig-blocking
 benchmark-transpose
 
 # Latex
@@ -43,6 +42,7 @@ benchmark-transpose
 *.pyg
 *.synctex.gz
 *.toc
+*.pdf
 
 # Debug files
 *.dSYM/

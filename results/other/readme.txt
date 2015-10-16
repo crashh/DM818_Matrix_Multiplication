@@ -1,1 +1,1 @@
-results for other goes here
+These are the output results from running different jobs on imada. Note that the blocked version is our implementation.
