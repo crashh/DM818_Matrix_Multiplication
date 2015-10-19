@@ -178,10 +178,10 @@ with each other at the same time.
 
 By using SIMD instructions, we are able to cut the K iterations in half by doing
 two iterations at the same time with no additional cost. As a result we saw a
-significant performance improvement. %true? Do we have any before-after numbers?
+significant performance improvement. 
 
 However to using SSE instructions efficiently requires the data to be properly
-aligned at a 16-byte offset. % TODO reference to manual 
+aligned at a 16-byte offset.
 Since we do not have control of how the input data is stored, this will require 
 copying the data, and assure that the data is copied to start at a properly 
 aligned address. 
@@ -199,17 +199,17 @@ performance. We simply dealt with the problem by padding the matrices.
 In order to improve data locality, and take advantage of loading SSE
 instructions, data had to be re-arranged. This required new auxiliary arrays for
 the packed data, aligning it for 16 bytes. Since this data would have to be
-loaded regardless, then we won't incur any additional movement between the 
+loaded regardless, then we won't incur much additional movement between the 
 memory layers. % TODO Not trivial, not sure this is enough, what about 
 % overhead from writing?
+% According to goto, there might be a slight, but non-critical overhead.
+% Changed a single word to match this.
 
 We first pack the entire B matrix, and then pack the A matrix in slivers of size
 $mc$. The order of this packaging ensures that the relevant $mc$ rows of the A
 matrix is always in memory along with most, if not all, of the B matrix too. By
 packing slivers of the A matrix we are able to increase the block size in
-general and still keep it all in memory. The idea behind this is that when we
-load in the next sliver of A, the least recently used data will be the old A
-matrix. %TODO: I need to rewrite this section.
+general and still keep it all in memory.
 
 \subsection{Loop Unrolling}
 
@@ -224,6 +224,9 @@ to wait for the multiplication to finish and continuing the loop.
 
 % Insert code example here?
 
+Loop un-rolling would result in diminishing returns at higher values, and as such
+it was assumed that the extent to how much could be pipelined at once was reached.
+
 %Padding:
 
 In order to perform loop unrolling, padding was initially used such that fringe
@@ -236,22 +239,24 @@ into a multiplicative of the unrolled size. This behaviour is clearly seen in
 the figure below. The explanation for this lies in the added calculations of the
 zeroes, along with using an auxiliary array for the result matrix.
 
-The auxiliary array was necessary as padding the result matrix was infeasible
+The auxiliary array was necessary, as padding the result matrix was infeasible
 when writing to values outside its array. This writing to a temp array and
-moving only the relevant entries was the best solution we could come up with.
+moving only the relevant entries to the result matrix. was the best solution 
+we could come up with to avoid over-writing critical data.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.9\linewidth]{graph-blocked-padding.png}
-  \caption{Unrolling the access to the B matrix with 4, using padding to handle 
-           fringe cases.}
+  \caption{Example using padding and auxiliary array on every block size. Note 
+  this is before this was improved upon.}
   \centering
   \label{fig:sub1}
 \end{figure}
 
-This solution was improved upon by doing an early check of the actual block
+This solution was how-ever improved upon by doing an early check of the actual block
 size, and then calling the method best fitted for that block size, such that
-loop unrolling could be maximized.
+loop unrolling could be maximized. Thereby avoiding the additional overhead unless
+absolutely necessary.
 
 \subsection{Fringe Cases and Padding}
 
@@ -274,7 +279,7 @@ to this are:
 \end{enumerate}
 
 Approach 1 may be the most traditional way of dealing with out-of-bounds
-behavior, when writing code that isn't performance critical. However this
+behaviour, when writing code that isn't performance critical. However this
 approach leads to a large amount of branching. Which the loop unrolling
 optimization also showed, leads to a significant performance loss.
 
@@ -284,9 +289,23 @@ this was still better than going with approach 1.
 
 % TODO Did we ever try using approach 1? Would be nice with some numbers to 
 % show that we actually did the right thing
+% No we did not, this was assumed. Should really do a quick test of this if
+% time allows it.
 
 \subsection{Choosing Block Sizes}
+Choosing the best block sizes, such that when packaging the matrices, as much
+relevant data as possible would still reside in the biggest cache, thus creating
+minimal overhead, is important.
 
+Changing the blocksize will directly affect performance in a positive or negative
+direction.
+% I really need to do a test of this with a different size, will do later today.
+
+We finally settled on the actual blocksize by testing the algorithm with
+slowly increased blocksizes until we would see the performance start to decrease 
+rather than increase. While this is not the optimal way, rather than calculating
+how much there should be room for, it was our experience that these calculations
+did not in fact give the best performance in practice.
 
 \chapter{Performance}
 
@@ -297,23 +316,40 @@ this was still better than going with approach 1.
 \section{Hopper}
 \subsection{Graphs}
 
-% A figure fhat shows the performance similar than the figure above, but using
+% A figure that shows the performance similar than the figure above, but using
 % all matrix sizes 2, 3, 4, ..., 769 for a single processor core of NERSC Hopper
 % cluster (y-axis should say percentage of peak performace).
 
-Below is a graph comparing the different algorithms. The Naive, Transposed, and BLAS algorithms are the one from the assignment. The Blocked algorithm is the implementation following the precious sections. All have been run on hopper, scheduled with a single node.
+Below is a graph comparing the different algorithms. The Naive, Transposed, and BLAS algorithms are the ones from the assignment. The Blocked algorithm is the implementation following the previous sections. All have been run on hopper, scheduled with a single node.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{comparison-graph.png}
-  \caption{Comparing different algorithms with our implementation. The Blocked is the performance we arrived at.}
+  \caption{Comparing different algorithms in GFLOPS.}
+  \centering
+  \label{fig:sub1}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{comparison-graph-percentage.png}
+  \caption{Comparing different algorithms in max theoretical percentage. Assuming Hopper has 8.4 GFLOPS.}
   \centering
   \label{fig:sub1}
 \end{figure}
 
+The max theoretical performance has been calculated, assuming hopper has 8.4 GFLOPS, using the following formula:
+
+\begin{align*}
+\frac{\text{(Actual GFLOPS)}}{8.4} = \text{Performance in \%}
+\end{align*}
+
 \subsection{Odd Behaviours}
 % The reason for any odd behavior (e.g., dips) in performance.
-The constant variation in the blocked algorithm comes from the different matrix sizes. The peaks are whenever the matrix fringe cases are non-existent. Thus the matrix has $Size%BLOCK_SIZE == 0$. % Er ikke engang helt sikker på dette er den eneste grund.
+The graph for our implementation (represented as a green) shows a constant decrease as sizes grow, for then to jump back up and resume the decrease from there. This behaviour comes from fringe cases where fringe size is below 8, as the fringes grows more and more in size until reaching size 8, where they can be unrolled again. This this decrease is a direct result of fringe cases not being unrolled to the same extend as the rest of the calculations.
+
+As the matrix sizes grow larger and larger, these fringe cases means less and less overall, and thus the decrease resulting from this shows less of an impact on the graph.
+
+Another odd behaviour is the ``spikes'' for every second plot, this is a direct result of the number being odd, and therefore needing to be padded when used in SSE instructions. Again this impact falls as sizes grow, because the fringe cases has less and less impact as the matrix grows.
 
 \subsection{Peak Performance}
 % Explain how you determined the peak performace, and again, the y-axis should
@@ -327,7 +363,11 @@ The constant variation in the blocked algorithm comes from the different matrix 
   \label{fig:sub1}
 \end{figure}
 
-The average peak-performance across sizes 2 to 769 is $55,235%$.
+The average peak-performance across sizes 2 to 769 is $55,235\%$, with a top peak of $69.166\%$ with matrix size 40. The first have been calculated from finding the average runtime for all sizes and then dividing that number by 8,4. The peak has been found by taking the GFLOPS for size 40 and dividing that by 8.4.
+
+\begin{align*}
+\frac{5,81}{8,4} = 69.166%
+\end{align*}
 
 \section{IMADA Machines}
 \subsection{Graphs}
@@ -335,7 +375,9 @@ The average peak-performance across sizes 2 to 769 is $55,235%$.
 % all matrix sizes 2, 3, 4, ..., 769 for a single processor of another system of
 % your choice (using the same kernel).
 
-Below is a graph like the previous, but instead run on the Imada terminal room.
+Below is a graph like the previous, but instead run on the Imada terminal room. When running these tests on the imada terminal room, we are working on an shared environment and thus performance may be affected by other users actions at the time of running. A single context-switch could cause the cache to flush all relevant data to memory and would then have to be loaded back in as the process resumes.
+
+Likewise is it easy to see that the BLAS library is not nearly as fine-tuned in these machines as what we saw on Hopper.
 
 \begin{figure}[H]
   \centering
@@ -348,6 +390,9 @@ Below is a graph like the previous, but instead run on the Imada terminal room.
 
 \chapter{Conclusion}
 % A short recap of what we achieved and the results.
+An effective algorithm was implemented following idea mentioned from the goto article. Using these ideas and tweaking we managed an average of around 55\% of theoretical max performance, peaking into almost 70\%. 
+
+We beat the BLAS implementation a couple of times for smaller matrix sizes, although for such small sizes the performance is not nearly as critical.
 
 
 %-----------------------------------------------------------------
