@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt,oneside]{book}
+\documentclass[a4paper.11pt,oneside]{book}
 
 \usepackage[english]{babel}
 \usepackage[showframe=false]{geometry}
@@ -156,6 +156,12 @@ The overall plan for this algorithm consists of three phases:
   \item Perform efficient matrix multiplication between these small blocks.
 \end{enumerate}
 
+<<<<<<< HEAD
+% TODO Talk about sizes of matrices
+% Covered in block size part.
+
+=======
+>>>>>>> 8c8e6e35d26ccd7e8a957c92cb2927eed1489008
 The following sections will go into details of how these phases were
 implemented, and how the results observed guided further optimizations.
 
@@ -187,6 +193,12 @@ matrices with dimensions that aren't a multiple of two. This problem became even
 more important when loop unrolling was performed to further optimize
 performance. We simply dealt with the problem by padding the matrices.
 
+<<<<<<< HEAD
+% TODO Do we put any code here?
+% Seems irrellevant, we were pretty much given the code in examples.
+
+=======
+>>>>>>> 8c8e6e35d26ccd7e8a957c92cb2927eed1489008
 \subsection{Preparing the Data}
 
 In order to improve data locality, and take advantage of loading SSE
@@ -203,7 +215,15 @@ general and still keep it all in memory.
 
 \subsection{Loop Unrolling}
 
+<<<<<<< HEAD
+% TODO: I need to read up a slight bit on exactly how this works, but the gist
+% of it is correct. (What is the difference between hardware pipelning and
+% software pipelining exactly?).
+
 In order to exploit pipe-lining, loop unrolling has been performed in the inner-
+=======
+In order to exploit pipelining, loop unrolling has been performed in the inner-
+>>>>>>> 8c8e6e35d26ccd7e8a957c92cb2927eed1489008
 most matrix multiplication. By loop unrolling the actual multiplication of the
 elements, the hardware is able to do several loads and multiplications at once,
 rather than having to wait for a a single to finish and continuing the loop.
@@ -214,9 +234,17 @@ of pipe-lining, two iterations unrolled into a single one might only take N+1 ti
 in total, by doing some of the other tasks while the first ones are finishing.
 Effectively cutting off N-1 time compared to a non-unrolled loop. 
 
+<<<<<<< HEAD
+% Insert code example here?
+% Tried to cover it with the explanation above.
 
 Loop un-rolling would result in diminishing returns at higher values, and as such
 it was assumed that the extent to how much could be pipelined at once was reached.
+=======
+Loop unrolling would result in diminishing returns at higher values, and as
+such it was assumed that the extent to how much could be pipelined at once was
+reached.
+>>>>>>> 8c8e6e35d26ccd7e8a957c92cb2927eed1489008
 
 %Padding:
 
@@ -251,7 +279,7 @@ absolutely necessary.
 
 \subsection{Fringe Cases and Padding}
 
-The padding however introduced yet another problem. When reaching certain fringe
+The padding introduced yet another problem. When reaching certain fringe
 cases, these padded entries would result in entries into the $C$ matrix which
 would be out of bounds.
 
@@ -275,6 +303,7 @@ minimal overhead, is important.
 
 Changing the block-size will directly affect performance in a positive or
 negative direction.
+% I really need to do a test of this with a different size, will do later today.
 
 We finally settled on the actual block-size by testing the algorithm with slowly
 increased block-sizes until we would see the performance start to decrease
@@ -285,8 +314,7 @@ did not in fact give the best performance in practice.
 \chapter{Performance}
 
 % How the same kernel performs on a different hardware platform (and a small
-% discussion of that) TODO: Need to test this, Hooper VS Imada, and how the
-% different architectures are (since this is the primary reason for variation).
+% discussion of that)
 
 \section{Hopper}
 \subsection{Results}
@@ -389,8 +417,12 @@ these machines as what we saw on Hopper.
   \label{fig:sub1}
 \end{figure}
 
+<<<<<<< HEAD
+It should be noted all these are run when using SSH, thus there is a decreased performance compared to logging directly in to a machine. % Dont know why but Rolf stated this.
+=======
 It should be noted all these are run when using SSH, thus there is a decreased
 performance compared to logging directly in to a machine.
+>>>>>>> 8c8e6e35d26ccd7e8a957c92cb2927eed1489008
 
 \chapter{Conclusion}
 % A short recap of what we achieved and the results.
