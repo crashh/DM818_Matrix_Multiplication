@@ -358,12 +358,12 @@ Another odd behaviour is the ``spikes'' for every second plot, this is a direct 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{peak-graph.png}
-  \caption{Comparing different algorithms with our implementation. The Blocked is the performance we arrived at.}
+  \caption{Peak performance}
   \centering
   \label{fig:sub1}
 \end{figure}
 
-The average peak-performance across sizes 2 to 769 is $55,235\%$, with a top peak of $69.166\%$ with matrix size 40. The first have been calculated from finding the average runtime for all sizes and then dividing that number by 8,4. The peak has been found by taking the GFLOPS for size 40 and dividing that by 8.4.
+The average performance across sizes 2 to 769 is $55,235\%$, with a top peak-performance of $69.166\%$ with matrix size 40. The first have been calculated from finding the average runtime for all sizes and then dividing that number by 8,4. The peak has been found by taking the GFLOPS for size 40 and dividing that by 8.4.
 
 \begin{align*}
 \frac{5,81}{8,4} = 69.166%
@@ -387,6 +387,7 @@ Likewise is it easy to see that the BLAS library is not nearly as fine-tuned in 
   \label{fig:sub1}
 \end{figure}
 
+It should be noted all these are run when using SSH, thus there is a decreased performance compared to logging directly in to a machine.
 
 \chapter{Conclusion}
 % A short recap of what we achieved and the results.
