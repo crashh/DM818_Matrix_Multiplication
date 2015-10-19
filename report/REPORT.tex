@@ -159,6 +159,7 @@ The overall plan for this algorithm consists of three phases:
 \end{enumerate}
 
 % TODO Talk about sizes of matrices
+% Covered in block size part.
 
 The following sections will go into details of how these phases were
 implemented, and how the results observed guided further optimizations.
@@ -193,6 +194,7 @@ more important when loop unrolling was performed to further optimize
 performance. We simply dealt with the problem by padding the matrices.
 
 % TODO Do we put any code here?
+% Seems irrellevant, we were pretty much given the code in examples.
 
 \subsection{Preparing the Data}
 
@@ -217,12 +219,19 @@ general and still keep it all in memory.
 % of it is correct. (What is the difference between hardware pipelning and
 % software pipelining exactly?).
 
-In order to exploit pipelining, loop unrolling has been performed in the inner-
+In order to exploit pipe-lining, loop unrolling has been performed in the inner-
 most matrix multiplication. By loop unrolling the actual multiplication of the
-elements, the hardware is able to do several computations at once, before having
-to wait for the multiplication to finish and continuing the loop.
+elements, the hardware is able to do several loads and multiplications at once,
+rather than having to wait for a a single to finish and continuing the loop.
+
+To understand this, the following example will try to explain it. Let's say that
+if a single load and multiplication takes N time, then by taking advantage 
+of pipe-lining, two iterations unrolled into a single one might only take N+1 time 
+in total, by doing some of the other tasks while the first ones are finishing.
+Effectively cutting off N-1 time compared to a non-unrolled loop. 
 
 % Insert code example here?
+% Tried to cover it with the explanation above.
 
 Loop un-rolling would result in diminishing returns at higher values, and as such
 it was assumed that the extent to how much could be pipelined at once was reached.
@@ -253,14 +262,14 @@ we could come up with to avoid over-writing critical data.
   \label{fig:sub1}
 \end{figure}
 
-This solution was how-ever improved upon by doing an early check of the actual block
+This solution was however improved upon by doing an early check of the actual block
 size, and then calling the method best fitted for that block size, such that
 loop unrolling could be maximized. Thereby avoiding the additional overhead unless
 absolutely necessary.
 
 \subsection{Fringe Cases and Padding}
 
-The padding however introduced yet another problem. When reaching certain fringe
+The padding introduced yet another problem. When reaching certain fringe
 cases, these padded entries would result in entries into the $C$ matrix which
 would be out of bounds.
 
@@ -310,8 +319,7 @@ did not in fact give the best performance in practice.
 \chapter{Performance}
 
 % How the same kernel performs on a different hardware platform (and a small
-% discussion of that) TODO: Need to test this, Hooper VS Imada, and how the
-% different architectures are (since this is the primary reason for variation).
+% discussion of that)
 
 \section{Hopper}
 \subsection{Graphs}
@@ -387,7 +395,7 @@ Likewise is it easy to see that the BLAS library is not nearly as fine-tuned in 
   \label{fig:sub1}
 \end{figure}
 
-It should be noted all these are run when using SSH, thus there is a decreased performance compared to logging directly in to a machine.
+It should be noted all these are run when using SSH, thus there is a decreased performance compared to logging directly in to a machine. % Dont know why but Rolf stated this.
 
 \chapter{Conclusion}
 % A short recap of what we achieved and the results.
